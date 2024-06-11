@@ -395,7 +395,7 @@ as
 declare cursor cur1 is select d.name as dn,count(*) as pc from teacher t,department d where t.deptno=d.id group by d.name orger by pc desc;
 begin
 	for i cur1 loop
-		DBE_OUTPUTPRINT_LINE(concat(i.dn,'---',i.pc::varchar));
+		DBE_OUTPUTPRINT_LINE(concat(i.dn,'---',i.pc::varchar));-- 分布式条件才能使用该函数
 	end loop;
 end;
 call pro_curs_1()
@@ -407,7 +407,7 @@ select d.name as dn,count(*) as pc from teacher t,department d
 where t.deptno = d.id group by d.name order by pc desc;
 begin
 for i in cur1 loop
-raise notice '%-%',i.dn,i.pc;
+raise notice '%-%',i.dn,i.pc;   -- 单节点集群暂时用这个方法解决这个问题
 end loop;
 end;
 moniti1$# /
@@ -459,7 +459,7 @@ from
      	join department d on t.deptno = d.id;
 begin
 	for i in cur1 loop
-		raise notice '%-%-%-%-%',i.tid,i.tname,i.dname,i.salary,i.title;
+		raise notice '%-%-%-%-%',i.tid,i.tname,i.dname,i.salary,i.title; -- %参数点位符号
 	end loop;
 end;
 /
@@ -587,7 +587,17 @@ alter tb_user index_name2 unusable;
 
 ##### (1) 权限管理模型RBAC和ABAC区别
 
++ **RBAC**： 基于角色的访问控制，角色通常是指具有某类共同特征的一组人，例如：部门、地点、资历、级别、工作职责等。在系统初始时Admin根据业务需要创建多个拥有不同权限组合的角色，当需要赋予绑定某个用户权限的时候，把用户归到相应角色里即可赋予需要的权限 
++ **ABAC**：不同于常见的将用户通过某种方式关联到权限的方式，ABAC则是通过动态计算一个或者一组属性来判断是否满足某种条件来进行授权判断(可以编写简单的逻辑)。属性通常来说分为四类：用户属性，环境属性，操作属性和对象属性，所以理论上能够实现非常灵活的权限控制，几乎能够满足所有类型的需求。权限判断需要实时执行，规则过多会导致性能问题。
++ 两者区别：RBAC基于用户角色提供对资源或者信息的访问，而ABAC提供基于用户，环境或者资源属性的访问权限。
+
 ##### (2) 数据库数据加密方式有哪些，至少3种
+
++ 函数加密
++ 透明加密
++ 全密态
++ 客户端和服务端SSL通信加密
++ 常见的算法为AES、DES、MD5和SM4
 
 
 
