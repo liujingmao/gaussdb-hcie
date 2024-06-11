@@ -59,18 +59,21 @@ alter database testdb connection limit 200000;
 ##### (1) 创建用户user1,密码'test@123'
 
 ```sql
+-- 考生作答
 create user user1 password 'test@123';
 ```
 
 ##### (2) 给用户授予查看审计权限，同时可以创建审计策略
 
 ```sql
+-- 考生作答
 alter user with auditadmin,sysadmin
 ```
 
 ##### (3) 切换到user1,创建审计策略adt1,对数据库执行create操作
 
 ```sql
+-- 考生作答
 \c - user1
 create audit policy adt1 privilege create;
 ```
@@ -78,24 +81,28 @@ create audit policy adt1 privilege create;
 ##### (4) 创建审计策略adt2,数据库执行select操作创建审计策略
 
 ```sql
+-- 考生作答
 create audit policy adt2 access select;
 ```
 
 ##### (5) 修改审计策略adt1,对地址为'10.20.30.40'进行审计
 
 ```sql
+-- 考生作答
 alter audit policy adt1 modify(filter on ip('10.20.30.40'));
 ```
 
 ##### (6) 创建表tb1,字段自定义
 
 ```sql
+-- 考生作答
 create table tb1(id int,name varchar(32));
 ```
 
 ##### (7) 创建审计策略adt3,仅审计记录用户root,在执行针对表tb1资源的select,insert,delete操作数据库创建审计策略(这个是难点)
 
 ```sql
+-- 考生作答
 create resource label audit_label_adt3 add table(tb1);
 create audit policy adt3 access select,insert,delete on label(audit_label_adt3) fileter on roles(root); 
 ```
@@ -103,12 +110,14 @@ create audit policy adt3 access select,insert,delete on label(audit_label_adt3) 
 ##### (8) 关闭adt1审计策略
 
 ```sql
+-- 考生作答
 alter audit policy adt1 disable
 ```
 
 ##### (9) 删除以上创建的审计策略，级联删除用户user1
 
 ```sql
+-- 考生作答
 -- 1. 删除策略
 drop audit policy adt1,adt2,adt3;
 -- 2. 删除资源标签
@@ -220,6 +229,20 @@ end;
 
 ```sql
 -- 考生作答
+-- 答案一
+create or replace procedure pro_avg_score(id inout int,coursename varchar(20))
+as
+begin
+	case when coursename='math' then select avg(math) into id from student where student_id = id;
+	when coursename='physical' then select avg(physical) into id from student where student_id = id;
+	when coursename='art' then select avg(art) into id from student where student_id = id;
+	when coursename='music' then select avg(music) into id from student where student_id = id;
+	end case;
+end;
+/
+
+-- 答案二
+-- 考生作答
 create or replace procedure pro_avg_score(id int,coursename varchar(20),avgscore out float)
 as
 begin
@@ -284,6 +307,7 @@ end;
 ##### (1) 查看202201班级和202202班级所有人语言成绩前10的记录，第一个查询使用union
 
 ```sql
+-- 考生作答
 select * from score1 order by chinese limit 10
 union
 select * from score2 order by chinese limit 20
@@ -292,6 +316,7 @@ select * from score2 order by chinese limit 20
 ##### (2) 对以上SQL语句进行优化
 
 ```sql
+-- 考生作答
 select * from score1 order by chinese limit 10
 union all
 select * from score2 order by chinese limit 10
@@ -300,12 +325,14 @@ select * from score2 order by chinese limit 10
 ##### (3) 查看两个班级的科目，202201班级在score2表中不存在的成绩，要求使用not in(需要确定score1,score2表具体字段有哪些科目，以及所谓相同科目是一个具体科目还是所有科目都要判断)
 
 ```sql
+-- 考生作答
 (select chinese from score1) not in (select chinese form score2);
 ```
 
 ##### (4) 对以上SQL语句进行优化
 
 ```sql
+-- 考生作答
 -- not 修改为not exists 
 (select chinese from score1) not exists (select chinese form score2);
 ```
@@ -337,15 +364,25 @@ where
 	totalscore1 > totalscore2
 ```
 
-
-
 ####  5. 论述
 
 ##### (1) 全量备份、差分备份和增量备份的区别
 
++ 全量备份：在备份全部数据时，全量备份需要的时间最长，因为需要备份的数据量大。但是，这种备份方式在恢复速度最快，只需要一个磁盘可恢复丢失的数据，此外，由于需要备份的数据量较大，全量备份可能会占用比较多的存储空间；
++ 差分备份：差分备份是备份自上一次完全备份之后有变化的数据。这种备份方式相较于全量备份，备份数据量少，因此 备份所需要的时间较少。同时，由于只需要对第一次全备份和最后一次差异备份进行恢复，所以恢复时间也相对较快。但是，差分备份的数据恢复过程相较于全量备份和增量备份较为复杂；
++ 增量备份：增量备份是备份上一次备份(包括完全备份、差异备份、增量备份)之后有变化的数据。这种备份方式最大的优点是没有重复的备份数据，因此备份的数据量并不大，备份所需要的时间很短。但是，增量备份的数据恢复比较麻烦，需要所有的增量备份数据才能进行恢复；
++ 三种备份所备份的数据量不一样，所需要的时间也不一样，全量备份不需要依赖于其他任意备份，差分备份和增量备份需要依赖于全量备份。
+
 ##### (2) 全量备份、差分备份和增量备份数据集大小关系
 
++ 全量备份的数据是最大的，是执行备份时刻的所有数据；
++ 差分备份的数据虽然没有全量大，但相比较增量更大，因为差分备份的是相较于上次全量备份有变更的数据；
++ 增量备份的数据集大小是有三种备份中最小的，因为增量备份只与上一次备份相比较，无论上一次备份是全量、差分还是增量都可以；
+
 ##### (3) 数据可以恢复到指定时间点，使用什么技术实现，与物理文件备份相比，这种依赖哪个关键文件
+
++ 将数据恢复到指定时间点需要基于PITR技术实现，主要需要依赖于全量备份文件、增量备份文件和WAL日志；
++ 恢复时先根据指定时间点找到最近上次全量备份进行恢复，然后逐个恢复这次全量后的增量备份，直到恢复到时间点前最后一次增量备份，从最后一次增量备份到时间点这段时间数据通过WAL日志进行恢复。
 
 
 
