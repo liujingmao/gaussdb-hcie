@@ -220,13 +220,13 @@ end;
 
 ```sql
 -- 考生作答
-create or replace procedure pro_avg_score(id int coursename varchar(20),avgscore int)
+create or replace procedure pro_avg_score(id int,coursename varchar(20),avgscore out float)
 as
 begin
-	case when coursename='math' then select avg(math) into avgscore from student whre student_id = id;
-	when coursename='physical' then select avg(physical) into avgscore from student whre student_id = id;
-	when coursename='art' then select avg(art) into avgscore from student whre student_id = id;
-	when coursename='music' then select avg(music) into avgscore from student whre student_id = id;
+	case when coursename='math' then select avg(math) into avgscore from student where student_id = id;
+	when coursename='physical' then select avg(physical) into avgscore from student where student_id = id;
+	when coursename='art' then select avg(art) into avgscore from student where student_id = id;
+	when coursename='music' then select avg(music) into avgscore from student where student_id = id;
 	end case;
 end;
 /
