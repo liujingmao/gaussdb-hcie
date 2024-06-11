@@ -1,593 +1,351 @@
-### 高斯IE第一套
+### 高斯IE第四套
 
-#### 1. 数据库对象管理及SQL应用
+#### 1. 数据库连接
 
-##### 当前有两张表，分别是学生表和班级表，请基于这两张表完成以下实验要求。
-
-```sql
--- create table
-create table student(sno int,sname varchar(50),score int,cno int);
-create table classes(cno int,cname varchar(50));
-
--- import datas
-insert into student values(123,'a',456,1);
-insert into student values(124,'b',546,1);
-insert into student values(125,'c',548,1);
-insert into student values(126,'d',569,1);
-insert into student values(127,'e',540,1);
-insert into student values(128,'f',536,2);
-insert into student values(129,'g',512,2);
-insert into student values(130,'h',546,2);
-insert into student values(131,'i',508,2);
-insert into student values(132,'j',456,2);
-
-insert into classes values(1, '1 班');
-insert into classes values(2, '2 班');
-```
-
-##### (1) 查询学号为130的学生的名字、总成绩以及所在班级
+##### (1) 查看全局最大连接数
 
 ```sql
 -- 考生作答
-select s.sname,s.score,c.cname from student s,classes c where s.cno = c.cno where sno = 130;
+show max_connections;
 ```
 
-##### (2) 查看每个班级(cno)月考总分(score)前三名，其中要求分数相同的人具有相同的编号(且排名不中断)
+##### (2) 创建用户并指定最大连接数，指定最大连接数为20000
 
 ```sql
 -- 考生作答
-select * from (select *, dense_rank() over(partition by cno order by score desc) as rk from student) where rk <=3;
+create user testuser password 'Test@123' connectioin limit 20000;
 ```
 
-#### 2. 常用系统表查询 
-
-##### (1) 表创建
-
-##### 请按照要求创建表p_table(a int,b int,c int,d int)表，指定以b字段作为分区键，按10以下，10-20，20-30，30-40分，以a字段作为分布键的列存在(云主机到位后练习)
+##### (3) 查看用户的连接数，展示用户、最大连接数
 
 ```sql
 -- 考生作答
-create table p_table(a int,b int,c int,d int) with (ORIENTATION=column)
-distribute by hash(a)
-partition by range(b) (
-	partition p1 values less than(10),
-	partition p2 values less than(20),
-	partition p3 values less than(30),
-    partition p4 values less than(40)
-);
+select rolname,rolconnlimit from pg_roles where rolname = 'testuser';
 ```
 
-##### (2) 查询表(p_table)的模式名和表名
+##### (4) 修改用户最大连接数，将最大连接数修改为10000
 
 ```sql
 -- 考生作答
--- 方法1，比较长的SQL
-select 
-	c.relname,
-	n.nspname 
-from 
-	pg_class c 
-		join
-	pg_namespace n
-		on
-	c.relnamespace = n.oid(无法理解？？？？？)
-where
-	c.relname = 'p_table';
-
--- 方法2，简单容易让人理解
-select 
-	tablename,
-	schemaname 
-from 
-	pg_tables 
-where 
-	tablename = 'p_table';
- tablename | schemaname
------------+------------
- p_table   | public
-(1 row)
+alter user testuser connectioin limit 10000;
 ```
 
-##### (3) 查询表的所在节点nodeoids信息
+##### (5) 创建数据库指定最大连接数，指定最大连接数为100000，并使用SQL查看展示数据库及最大连接数
 
 ```sql
 -- 考生作答
-select 
-	t1.relname,
-	t2.nodeoids 
-from 
-	pg_class t1,
-	pgxc_class t2,
-	pg_namespace t3 
-where t1.oid = t2.pcrelid 
-and t1.relnamespace = t3.oid and t1.relname = 'p_table'
-and t3.nspname = 'public';
--- 有些无法理解 
+-- 1. create database
+create database testdb connection limit 100000;
+-- 2. select 
+select * from pg_database where database = 'testdb';
 ```
 
-##### (4) 查询表所在的节点实例信息
+##### (6) 创建数据库指定最大连接数，查看数据库最大连接数，展示数据库名称和最大连接数
 
 ```sql
 -- 考生作答
-select 
-	t4.* 
-from 
-	pg_class t1,
-	pgxc_class t2,
-	pg_namespace t3,
-	pgxc_node t4
-where
-	t1.oid = t2.pcrelid
-and
-	t1.relnamespace = t3.oid 
-and 
-	cast(t2.nodeoids as varchar(20)) = cast(t4.oid as varchar(20)) 
-and
-	t1.relname = 'p_table'
-and 
-	t3.nspname = 'public';
+select database,datconnlimit from pg_database where database = 'testdb';
 ```
 
-#### 3. 用户及权限管理
-
-##### 当前有一张表sjh_test(a int,b int), 和角色jsh112,请给予当前环境完成以下用户及权限相关管理操作
-
-```sql
--- create table
-create table sjh_test(a int,b int,c int);
--- create role 
-create role sjh112 password 'Huawei12#$%';
-```
-
-##### (1) 创建用户sjh111
+##### (7) 修改数据库的最大连接数，将最大连接数修改为200000
 
 ```sql
 -- 考生作答
-create user sjh111 password 'Huawei12#$%';
+alter database testdb connection limit 200000;
 ```
 
-##### (2) 将表sjh_test表的读取，删除权限给sjh111用户
+#### 2. 安全审计
+
+##### (1) 创建用户user1,密码'test@123'
 
 ```sql
--- 考生作答
--- 普通用户只有public模式的权限，需要将当前schema使用权限赋予给用户
-grant usage on schema public to sjh111;
--- 赋权
-grant select,delete on sjh_test to sjh111;
+create user user1 password 'test@123';
 ```
 
-##### (3) 为用户sjh111权限在sjh_test表的a,b列上的查询、添加和更新权限
+##### (2) 给用户授予查看审计权限，同时可以创建审计策略
 
 ```sql
--- 考生作答
-grant select(a,b),insert(a,b),update(a,b) on sjh_test to sjh111;
+alter user with auditadmin,sysadmin
 ```
 
-##### (4) 将用户sjh111权限在sjh_test表的a列上的查询、添加和更新权限回收
+##### (3) 切换到user1,创建审计策略adt1,对数据库执行create操作
 
 ```sql
--- 考生作答
-revoke select(a),insert(a),update(a) on sjh_test from sjh111;
+\c - user1
+create audit policy adt1 privilege create;
 ```
 
-##### (5) 创建jsh_audit角色,该角色拥有审计权限 (with auditadmin加上会使角色有审计权限)
+##### (4) 创建审计策略adt2,数据库执行select操作创建审计策略
 
 ```sql
--- 考生作答
-create role jsh_audit with audtiadmin password 'XXXXXXX'; -- 必须加上密码，否则报错
+create audit policy adt2 access select;
 ```
 
-##### (6) 将sjh112角色权限授予给用户sjh111,并允许sjh111继承权限可以再次授予其他角色或用户(with admin option)
+##### (5) 修改审计策略adt1,对地址为'10.20.30.40'进行审计
 
 ```sql
--- 考生作答
-grant sjh112 to sjh111 with admin option;
+alter audit policy adt1 modify(filter on ip('10.20.30.40'));
 ```
 
-##### (7) 创建用户sjh113,设置使用有效期 "2023-01-28" 到 "2026-01-01"
+##### (6) 创建表tb1,字段自定义
 
 ```sql
--- 考生作答
-create user sjh113 password 'xxxxxxx' valid begin '2023-01-28' valid until '2026-01-01';
+create table tb1(id int,name varchar(32));
 ```
 
-#### 4. 行级访问控制 
-
-##### 当前 有all_data表，字段信息如下 ，请给予表实现行级别访问控制
+##### (7) 创建审计策略adt3,仅审计记录用户root,在执行针对表tb1资源的select,insert,delete操作数据库创建审计策略(这个是难点)
 
 ```sql
- -- create table 
- create table all_data(
- 	 role varchar(50),
- 	 name varchar(50),
- 	 age int
- );
- -- insert into data
- insert into all_data values('root','zhangsan',18),('sjh111','lisi',43),('sjh113','wangwu',35);
+create resource label audit_label_adt3 add table(tb1);
+create audit policy adt3 access select,insert,delete on label(audit_label_adt3) fileter on roles(root); 
 ```
 
-##### (1) 打开all_data表的行访问控制策略开关
+##### (8) 关闭adt1审计策略
 
 ```sql
--- 考生作答
-alter table all_data enable row level security;
+alter audit policy adt1 disable
 ```
 
-##### (2) 为表all_data创建行访问控制策略，当前用户只能查看用户自身的数据
+##### (9) 删除以上创建的审计策略，级联删除用户user1
 
 ```sql
--- 考生作答
-create row level security policy rls ON all_data using(role = CURRENT_USER);
+-- 1. 删除策略
+drop audit policy adt1,adt2,adt3;
+-- 2. 删除资源标签
+drop resource label audit_label_adt3
+-- 3. 级联删除用户
+drop user testuser cascade
 ```
 
-##### (3) 为表all_data删除行访问控制策略
+#### 3. 存储过程
+
+##### 基于以下学生成绩表，完成以下实验
 
 ```sql
--- 考生作答
-drop row level security policy rls ON all_data;
-```
-
-##### (4) 给表all_data 关闭行级访问策略
-
-```sql
--- 考生作答
-alter table all_data disable row level security;
-```
-
-#### 5. 触发器
-
-```sql
--- 三张表
--- 学生信息表
-CREATE TABLE STUDENT(
-	sno integer,
-    sname varchar(50),
-	ssex varchar(5),
-    sage integer
-);
-
--- 课程表
-CREATE TABLE COURSE(
-	cno integer,
-    cname varchar(50),
-	credit integer
-);
-
--- 选课表
-CREATE TABLE ELECTIVE(
-	sno integer,
-    cno integer,
-	grade integer
-);
-```
-
-##### (1) 创建SELECT_SD，查看学生成绩信息，查看学生姓名，课程名称，课程成绩
-
-```sql
--- 考生作答
-create view 
-	SELECT_SD 
-as 
-	select 
-		sname,
-		cname,
-		grade
-	from 
-		student s,
-		course c,
-		electve e 
-	where 
-		e.sno = s.sno 
-	and 
-		e.cno = c.cno;
-```
-
-##### (2) 编写函数FUNC_SUM,根据传递的学生的学生编号或者姓名返回某个学生的分类总和
-
-```sql
--- 考生作答
-create or replace function FUNC_SUM(stuid int) returns integer as 
-$$
-declare result integer;
-begin
-	select sum(grade) into result from elective where sno = stuid;
-	return result;
-end;
-$$language plpgsql
-```
-
-##### (3) 创建触发器DELETE_ELE,在STUDENT表上绑定触发器DELETE_ELE，在删除表中某个学生时，将ELECTIVE表中该学生的选课记录一并删除
-
-```sql
--- 考生作答
--- 删除elective表记录的函数
-create or replace function func_delete_ele() returns trigger as 
-$$
-begin
-	delete from elective where sno = old.sno;
-	return old;
-end;
-$$language plpgsql
-
--- 绑定到student表的触发器
-create trigger delete_ele before delete on student for each row execute procedure func_delete_ele();
-```
-
-```sql
--- 总结一下触发器的结构和根据要求梳理运行流程
--- 删除elective表记录的函数
-create or replace function 
-func_delete_ele() 
-returns trigger 
-as 
-$$
-begin
-	delete from elective where sno = old.sno;
-	return old;
-end;
-$$language plpgsql
-
--- 绑定到student表的触发器
-create trigger delete_ele before delete on student for each row execute procedure func_delete_ele();
-
--- 参考学习：https://blog.csdn.net/GaussDB/article/details/134659930
-```
-
-#### 6. 游标
-
-##### 以下为表创建SQL语句，该题目没有数据 
-
-```sql
-create table TEACHER(
-	ID INTEGER NOT NULL,
-    NAME VARCHAR(50) NOT NULL,
-	DEPTNO INTEGER NOT NULL,
-    SALARY FLOAT NOT NULL,
-    TITLE VARCHAR(100) NOT NULL --职称：讲师、副教授、教授
-)
-
-create table DEPARTMENT(
-	ID INTEGER NOT NULL,
-    NAME VARCHAR(50) NOT NULL);
-   
-create table TEACHER(
-	ID INTEGER NOT NULL,
-    NAME VARCHAR(50) NOT NULL,
-	DEPTNO INTEGER NOT NULL,
-    SALARY FLOAT NOT NULL,
-    TITLE VARCHAR(100) NOT NULL
-);
-
-create table DEPARTMENT(
-	ID INTEGER NOT NULL,
-    NAME VARCHAR(50) NOT NULL);
+-- create table 
+create table student(
+	student_id int not null,
+    math int not null,
+    physical int not null,
+    art int not null,
+    music int not null);
     
-insert into TEACHER values(1,'Zhangsan',20,50000.00,'教授'),
-(2,'XiaoMing',20,20000.00,'讲师'),
-(3,'lisi',30,20000.00,'副教授'),
-(4,'XiaoMing',30,20000.00,'副教授');
-
-insert into TEACHER values(5,'Zhangwukun',40,50000.00,'教授'),
-(6,'WuSong',20,21000.00,'讲师'),
-(7,'liuSan',50,20500.00,'副教授'),
-(8,'Sehu',30,26000.00,'副教授');
-
-insert into TEACHER values(9,'yiyuqian',40,1.00,'教授'),
-(10,'liangyuanqian',20,2.00,'讲师'),
-(11,'sanyuan',50,3.00,'副教授'),
-(12,'siyuanqian',30,4.00,'副教授');
-
-insert into TEACHER values(13,'liuwan',40,60000.00,'教授'),
-(14,'qiwan',20,70000.00,'讲师'),
-(15,'bawan',50,80000.00,'副教授'),
-(16,'jiuwan',40,90000.00,'副教授');
-
-insert into DEPARTMENT values(20,'机电工程学院'),(30,'计算机学院');
-insert into DEPARTMENT values(40,'自动化学院'),(50,'管理学院');
-```
-
-##### (1) 创建存储过程pro_curs_1,使用游标打印各部门总人数，按照人数降序排序，打印格式如下 ：部门名称1---人数部门名称2---人数打印操作可以使用DBE_OUTPUTPRINT_LINE(outputstr)接口
-
-```sql
--- 考生作答
-create or replace procedure pro_curs_1()
-as
-declare cursor cur1 is select d.name as dn,count(*) as pc from teacher t,department d where t.deptno=d.id group by d.name orger by pc desc;
-begin
-	for i cur1 loop
-		DBE_OUTPUTPRINT_LINE(concat(i.dn,'---',i.pc::varchar));
-	end loop;
-end;
-call pro_curs_1()
-
-create or replace procedure pro_curs_1()
-as
-declare cursor cur1 is
-select d.name as dn,count(*) as pc from teacher t,department d
-where t.deptno = d.id group by d.name order by pc desc;
-begin
-for i in cur1 loop
-raise notice '%-%',i.dn,i.pc;
-end loop;
-end;
-moniti1$# /
-CREATE PROCEDURE
-moniti1=# call  pro_curs_1();
-NOTICE:  计算机学院-2
-NOTICE:  机电工程学院-2
- pro_curs_1
-------------
-```
-
-##### (2) 创建存储过程pro_curs_2,使用游标读取薪水按降序排序的前三位老师和后三位老师的信息，分别获取ID，姓名，部门名称，薪水和职称，请按以下格式打印ID-姓名-部门名称-薪水-职称
-
-```sql
--- 考生作答
-create or replace procedure pro_curs_2()
-as 
-declare cursor cur1 is 
-select
-	t.id,
-	t.name,
-	d.name,
-	t.salary,
-	t.title
-from
-	((select * from teacher order by salary desc limit 3) 
-     	union all
-     (select * from teacher order by salary limit 3)) t 
-     	join department d on t.deptno = d.id;
-begin
-	for i in cur1 loop
-		DBE_OUTPUTPRINT_LINE(concat(i.id::varchar,'-',i.sname,'-',i.dname,'-',i.salary::varchar,'-',i.title));
-	end loop;
-end;
-
-create or replace procedure pro_curs_2()
-as 
-declare cursor cur1 is 
-select
-	t.id as tid,
-	t.name as tname,
-	d.name as dname,
-	t.salary,
-	t.title
-from
-	((select * from teacher order by salary desc limit 3) 
-     	union all
-     (select * from teacher order by salary limit 3)) t 
-     	join department d on t.deptno = d.id;
-begin
-	for i in cur1 loop
-		raise notice '%-%-%-%-%',i.tid,i.tname,i.dname,i.salary,i.title;
-	end loop;
-end;
-/
-```
-
-```sql
--- 总结存储过程与游标的用法
--- 创建存储过程pro_curs_2,使用游标读取薪水按降序排序的前三位老师和后三位老师的信息，分别获取ID，姓名，部门名称，薪水和职称，请按以下格式打印ID-姓名-部门名称-薪水-职称
-create or replace procedure -- 1. 创建存储过程的固定
-pro_curs_2() -- 2. 根据题目给的要求声明存储过程名称
-as -- 3. AS作为连词，固定写法
-declare cursor cur1 -- 4. 声明并创建游标，declare cursor 是声明游标的固定词汇，cur1是游标名称，可以随意自己定义
-is -- 4. is作为连词，固定写法,后面接的是sql逻辑，可以理解成is后面内容结果放在游标cur1中，cur1是对象，该对象放在是后面查询的结果,后面select ... from 出来的结果放在cur1对象中
-select
-	t.id as tid,
-	t.name as tname,
-	d.name as dname,
-	t.salary,
-	t.title
-from
-	((select * from teacher order by salary desc limit 3) 
-     	union all
-     (select * from teacher order by salary limit 3)) t 
-     	join department d on t.deptno = d.id;
--- 5. 对标注里面的结果进行打印，使用raise notice,该业务逻辑使用begin 和 end包裹
-begin
-	for i in cur1 loop -- 6. 对cur1中的结果进行便利 后面接loop关键字
-		raise notice '%-%-%-%-%',i.tid,i.tname,i.dname,i.salary,i.title; -- 7. %是动态参数的占位符号
-	end loop; -- 8. 后面接个end loop为固定搭配结构
-end;
-/
-```
-
-#### 7. 数据库优化
-
-##### 通常的SQL优化会通过参数调优的方式进行调整，例如如下参数
-
-```
-set enable_fast_query_shipping = off;
-set enable_stream_operator = on;
-```
-
-##### 请根据以下表完成数据库优化
-
-```sql
--- create table
-create table tb_user(
-    stu_no INT,
-    stu_name VARCHAR(32),
-	age INT,
-    hobby_type INT
-);
-
 -- insert data
-insert into 
-	tb_user select id,'xiaoing'||(random()*60+10)::int,
-	(random()*60+10)::int,
-	(random()*5+1)::int 
+insert into student values(1001,56,84,65,35),(1001,63,46,82,46),(1001,85,65,32,85);
+insert into student values(1002,81,86,95,72),(1002,65,46,96,45),(1002,76,54,85,68);
+insert into student values(1003,69,85,76,76),(1003,78,68,31,57),(1003,46,95,94,65);
+insert into student values(1004,76,95,76,62),(1004,63,96,45,96),(1004,16,58,34,69);
+insert into student values(1005,96,63,52,75),(1005,95,86,42,85),(1005,96,45,78,65);
+insert into student values(1006,85,68,26,76),(1006,95,76,85,45),(1006,86,95,54,68);
+insert into student values(1007,76,58,95,49),(1007,85,65,45,88),(1007,46,85,75,35);
+insert into student values(1008,76,85,96,45),(1008,66,22,33,88),(1008,89,89,56,85);
+insert into student values(1009,56,78,96,59),(1009,75,86,95,75),(1009,89,65,45,25);
+insert into student values(1010,76,85,95,45),(1010,76,95,85,36),(1010,76,82,96,35);
+insert into student values(1011,88,99,77,66),(1011,56,85,69,85),(1011,76,85,69,85);
+```
+
+##### (1) 对math和phsycal排名前10的学生，art加5分，求所有学生总成绩
+
+```sql
+-- 考生作答
+(select 
+ 	student_id,
+ 	sum(math+physical+art+5+music) as score 
+ from
+ 	student 
+ group by 
+ 	student_id 
+ order by 
+ 	score desc 
+ limit 10) 
+union all 
+(select
+ 	student_id,
+ 	sum(math+physical+art+music) as score 
+ from 
+ 	student
+ group by
+ 	student_id
+ order by
+ 	score 
+ desc 
+ offset 10);
+```
+
+##### (2) 获取art和music排名前10，同时math和physical在art和music前10名的学生信息
+
+```sql
+-- 考生作答
+select 
+	s1.*,
+	s2.mpscore
 from 
-	(select generate_series(1,100000)id) tb_user;
+	(select 
+     	student_id,
+     	sum(art+music) as amscore 
+     from 
+     	student 
+     group by 
+     	student_id 
+     order by 
+     	amscore 
+     desc limit 10) s1
+join
+	(select
+    	student_id,
+    	sum(math+physical) as mpscore 
+     from 
+     	student 
+     group by 
+     	student_id 
+     order by 
+     	mpscore 
+     desc limit 10) s2
+on s1.student_id = s2.student_id;
 ```
 
-##### (1) 收集tb_user的统计信息
+##### (3) 编写存储过程，输入学生id返回总成绩
 
 ```sql
 -- 考生作答
-analyze tb_user;
+create or replace procedure pro_total_score(id_score inout int)
+as 
+begin
+	select sum(math+physical+art+music) into id_score from student where student_id = id_score;
+end;
+/
 ```
 
-##### (2) 为下面两个查询语句创建索引，让执行计划和索引最合理
+##### (4) 编写存储过程，输入学号和科目名称，返回对应的平均成绩
 
 ```sql
-SQL1: explain analyze select * from tb_user where age=29 and stu_name = 'xiaoming';
-SQL2: explain analyze select * from tb_user where stu_no = 100 and age = 29;
+-- 考生作答
+create or replace procedure pro_avg_score(id int coursename varchar(20),avgscore int)
+as
+begin
+	case when coursename='math' then select avg(math) into avgscore from student whre student_id = id;
+	when coursename='physical' then select avg(physical) into avgscore from student whre student_id = id;
+	when coursename='art' then select avg(art) into avgscore from student whre student_id = id;
+	when coursename='music' then select avg(music) into avgscore from student whre student_id = id;
+	end case;
+end;
+/
+```
+
+##### (5)  编写存储过程，输入学生id和科目名称，输出对应的绩点值 0~59 给0；60~69给0.1;70~79给0.2; 80~89给0.3; 90~100给0.4
+
+```sql
+-- 考生作答 注意题目要求，写函数与写存储过程是不一样的
+create or replace procedure 
+pro_cal_point(id1 int,coursename varchar(30),point out float) as 
+begin
+	case when coursename = 'math' then
+		select (
+            case when math <=59 then 0
+            when math <=69 then 0.1
+            when math <=79 then 0.2
+            when math <=89 then 0.3
+            when math <=99 then 0.4
+       else 0 end) into point from student where student_id =id1 limit 1;
+       when coursename = 'physical' then
+		select (
+            case when physical <=59 then 0
+            when physical <=69 then 0.1
+            when physical <=79 then 0.2
+            when physical <=89 then 0.3
+            when physical <=99 then 0.4
+       else 0 end) into point from student where student_id =id1 limit 1;
+       when coursename = 'art' then
+		select (
+            case when art <=59 then 0
+            when art <=69 then 0.1
+            when art <=79 then 0.2
+            when art <=89 then 0.3
+            when art <=99 then 0.4
+       else 0 end) into point from student where student_id =id1 limit 1;
+       when coursename = 'music' then
+		select (
+            case when music <=59 then 0
+            when music <=69 then 0.1
+            when music <=79 then 0.2
+            when music <=89 then 0.3
+            when music <=99 then 0.4
+       else 0 end) into point from student where student_id =id1 limit 1;
+   else raise notice 'please input right course name;';
+   end case; 
+end;
+/
+```
+
+#### 4. 性能优化
+
+##### 有三个表，分别是学生信息表student和202201班级成绩表score1,202202班级成绩表score2
+
+##### (1) 查看202201班级和202202班级所有人语言成绩前10的记录，第一个查询使用union
+
+```sql
+select * from score1 order by chinese limit 10
+union
+select * from score2 order by chinese limit 20
+```
+
+##### (2) 对以上SQL语句进行优化
+
+```sql
+select * from score1 order by chinese limit 10
+union all
+select * from score2 order by chinese limit 10
+```
+
+##### (3) 查看两个班级的科目，202201班级在score2表中不存在的成绩，要求使用not in(需要确定score1,score2表具体字段有哪些科目，以及所谓相同科目是一个具体科目还是所有科目都要判断)
+
+```sql
+(select chinese from score1) not in (select chinese form score2);
+```
+
+##### (4) 对以上SQL语句进行优化
+
+```sql
+-- not 修改为not exists 
+(select chinese from score1) not exists (select chinese form score2);
+```
+
+##### (5) 查询班级202201语文成绩最高的学生，要求先创建索引，并能够保证一定会使用索引 
+
+```sql
+-- 考生作答
+create index chi_index on score1(chinese);
+select max(chinese) from score1;
+select max(chinese) from student;
+```
+
+##### (6)  查询202201班级的学生的成绩比202202班级的学生最高成绩还要大的学生信息，对以下给出的SQL进行改写
+
+```sql
+-- 原SQL??
 ```
 
 ```sql
 -- 考生作答
-SQL1:
-select gs_index_advise('select * from tb_user where age=29 and stu_name = "xiaoming"');
-create index index_name1 on tb_user(age,stu_name);
-                       
-SQL2:
-select gs_index_advise('select * from tb_user where stu_no = 100 and age = 29');
-create index index_name2 on tb_user(stu_no,age);
-```
-
-##### (3) 在上题的基础上，用3种不同的方式使如下SQL不走索引 
-
-```
-explain analyze select * from tb_user where stu_no = 100 and age =29;
-```
-
-```sql
--- 考生作答
--- 方法1. 通过hint干预优化不走索引
-SQL1: 
-explain anylyze 
-select
-	/* + tablescan */* 
+select 
+	id,
+	totalscore1 
 from
-	tb_user 
-where 
-	age = 29
-and 
-	stu_name = 'xiaoming';
-SQL2:
-explain anylyze 
-select
-	/* + tablescan */* 
-from
-	tb_user 
-where 
-	stu_no=100
-and 
-	age = 29;
--- 方法2.增大index开销
-set cpu_index_tuple_cost = 100000
--- 方法3.直接禁用索引
-alter tb_user index_name1 unusable;
-alter tb_user index_name2 unusable;
+	(select id,max(math+chinese) as totalscore1 from score1 ) s1,
+	(select id,max(math+chinese) as totalscore2 from score2 ) s2,
+where
+	totalscore1 > totalscore2
 ```
 
-#### 8. 论述
 
-##### (1) 权限管理模型RBAC和ABAC区别
 
-##### (2) 数据库数据加密方式有哪些，至少3种
+####  5. 论述
+
+##### (1) 全量备份、差分备份和增量备份的区别
+
+##### (2) 全量备份、差分备份和增量备份数据集大小关系
+
+##### (3) 数据可以恢复到指定时间点，使用什么技术实现，与物理文件备份相比，这种依赖哪个关键文件
 
 
 
