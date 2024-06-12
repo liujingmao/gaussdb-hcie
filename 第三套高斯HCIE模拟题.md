@@ -26,24 +26,44 @@ insert into su values(1,'secebbie','peter','peter','S',86),
 
 ```sql
 -- 考生作答
+select 
+	initcap(firstname||'.'||familyname) 
+from 
+	su;
+select 
+	initcap(concat(firstname,'.',familyname)) 
+from 
+	su;
+-- 首字母大写怎么搞？？？？
 ```
 
 ##### (2) 插入一条新数据(2,'tom','jerry','tom','H',63),当出现主键冲突时，将主键修改为'F'
 
 ```sql
 -- 考生作答
+insert into su values(2,'tom','jerry','tom','H',63) on duplicate key update mark = 'F';
 ```
 
 ##### (3) 查询表，检查姓名是否是sec开头，展示姓名，判断结果result
 
 ```sql
 -- 考生作答
+select 
+	firstname,
+	(case when firstname like 'sec%' then 'T' else 'F' end) as result 
+from 
+	su;
 ```
 
 ##### (4) 查询表中所有列的数据，按照成绩进行排序，并显示名次(position),名次为连续的。要求展示所有字段，名字段position
 
 ```sql
 -- 考生作答
+select 
+	*,
+	dense_rank() over (order by score) as position 
+from 
+	su;
 ```
 
 #### 2.  数据库对象管理及SQL应用2
@@ -51,6 +71,7 @@ insert into su values(1,'secebbie','peter','peter','S',86),
 #### 基于以下学生成绩事实表和维度表，完成以下实验要求
 
 ```sql
+-- 创建表
 create table student(
 	student_id int,
     math int,
@@ -58,7 +79,7 @@ create table student(
     art int,
     m2 int
 );
-
+-- 创建表
 create table weight(
     weight_no int,
     math numeric,
@@ -67,6 +88,7 @@ create table weight(
     m2 numeric
 );
 
+-- 插入数据
 insert into student values(1,80,70,87,90);
 insert into student values(2,80,70,87,90);
 insert into student values(3,81,80,69,96);
@@ -90,7 +112,8 @@ select
 	student_id,
 	(math+phy) as sum_m_p,
 	(art+m2) as sum_a_m2 
-from student; 
+from 
+	student; 
 ```
 
 ##### (2) 根据维度表，按照两种加权算法计算出每个学生的加权成绩，展示student_id,weight_sum,单个学生加权成绩可以<u>*两行输出*</u> 
@@ -182,7 +205,13 @@ select ledger_gchain_check('ledgernsp','usertable'); -- 这东西就只有记住
 -- 方法1
 show audit_enabled;
 -- 方法2 
-select name,setting from pg_settings where name = 'audit_enabled'
+select 
+	name,
+	setting 
+from 
+	pg_settings 
+where 
+	name = 'audit_enabled';
 ```
 
 ##### (2)  用SQL查看日志存储的最大空间
@@ -192,7 +221,13 @@ select name,setting from pg_settings where name = 'audit_enabled'
 -- 方法1
 show audit_space_limit;
 -- 方法2 基于gs_settings 系统视图查看
-select name,setting from pg_settings where name = 'audit_space_limit';
+select 
+	name,
+	setting 
+from 
+	pg_settings 
+where 
+	name = 'audit_space_limit';
 ```
 
 ##### (3) 查看过去一天所有产生审计日志的总数，当前时间要求使用now()
