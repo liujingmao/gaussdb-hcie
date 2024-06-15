@@ -4,7 +4,7 @@
 
 #### 1. 数据库对象管理及SQL应用
 
-#####　基于以下学生成绩表，完成以下实验要求
+#####　    基于以下学生成绩表，完成以下实验要求
 
 ```sql
 --- 创建表
@@ -34,11 +34,14 @@ moniti2-# from stu;
 (5 rows)
 
 ```
+```sql
 窗口函数，正常来说所有的聚合函数都是在分组之后计算的对吧，比如常见的count，sum，avg这些，但是openGauss的分组有些问题，就是要单独查询的字段都必须是分组键，这个over的作用相当于是局部的分组，over里面有两个可配置的参数over(partition by c1 order by c1 desc) partition就等价于groupby，orderby就是排序，在聚合函数后面加over表示你的聚合计算是根据后面over指定的分组方式和排序方式得到结果
 
 正常计算每个学生的总成绩就是select sid,sum(score) from score group by sid，如果要查询学生姓名那就得是select sid,sname,sum(score) from score group by sid,sname
 
 用over的话就是对于大查询来说没有做分组select sid,sname,sum(score) over(partition by sid) from score
+```
+
 ##### (2) 编写函数获取成绩绩点，输入学生id和科目名称，输出对应的绩点值 0~59 给0；60~69给0.1;70~79给0.2; 80~89给0.3; 90~100给0.4
 
 ```sql
@@ -51,7 +54,6 @@ select (case when inputscore <=59 then 0 when inputscore <=69 then 0.1 when inpu
 return gd;
 end;
 $$ language plpgsql;
-
 
 -- 总结高斯数据库编写函数的结构及case when 结构
 -- case when结构以case开头，以end终止
@@ -329,8 +331,6 @@ create masking policy maskpol1 maskall on label(mask_lb1);
 alter masking policy maskpol1 COMMENTS 'masking policy for tb_for_masking.col1';
 ```
 
-
-
 ##### (5) 为maskpol1脱敏策略在原基础上新增加以col2列做随机脱敏，脱敏函数使用randommasking
 
 ```sql
@@ -431,8 +431,6 @@ $$language plpgsql;
 create trigger delete_ele before delete on student for each row execute procedure func_delete_ele() ;
 ```
 
-
-
 #### 6. 存储过程
 
 ##### 基于以下信息表，完成以下实验要求
@@ -470,7 +468,7 @@ call create_student_information(90000)
 select count(*) from student;
 ```
 
-##### 7. 数据库优化
+#### 7. 数据库优化
 
 ##### 通常的SQL优化会通过参数调优的方式进行调整，例如如下参数
 
