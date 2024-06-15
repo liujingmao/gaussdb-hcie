@@ -29,7 +29,17 @@ insert into classes values(2, '2 班');
 
 ```sql
 -- 考生作答
-select s.sname,s.score,c.cname from student s,classes c where s.cno = c.cno where sno = 130;
+select 
+	s.sname,
+	s.score,
+	c.cname 
+from 
+	student s,
+	classes c 
+where 
+	s.cno = c.cno 
+and 
+	sno = 130;
 ```
 
 ##### (2) 查看每个班级(cno)月考总分(score)前三名，其中要求分数相同的人具有相同的编号(且排名不中断)
@@ -37,6 +47,9 @@ select s.sname,s.score,c.cname from student s,classes c where s.cno = c.cno wher
 ```sql
 -- 考生作答
 select * from (select *, dense_rank() over(partition by cno order by score desc) as rk from student) where rk <=3;
+
+-- 方法2 
+(select * from student where cno = 1 order by score desc limit 3) union all (select * from student where cno = 2 order by score desc limit 3);
 ```
 
 #### 2. 常用系统表查询 
@@ -99,9 +112,14 @@ from
 	pg_class t1,
 	pgxc_class t2,
 	pg_namespace t3 
-where t1.oid = t2.pcrelid 
-and t1.relnamespace = t3.oid and t1.relname = 'p_table'
-and t3.nspname = 'public';
+where 
+	t1.oid = t2.pcrelid 
+and 
+	t1.relnamespace = t3.oid 
+and 
+	t1.relname = 'p_table'
+and 
+	t3.nspname = 'public';
 -- 有些无法理解 
 ```
 
