@@ -174,16 +174,48 @@ set enable_fast_query_shipping = off;
 set enable_stream_operator = on;
 ```
 
-根据以下表完成数据库优化
+##### 根据以下表完成数据库优化
 
 ```sql
 -- create table
 create table tb_user(
-	
-
-
-);
+    stu_no int,
+    stu_name varchar(32),
+    age int,
+    hobby_type int) distribute by hash(age);
 -- insert into data
+insert into tb_user select id, 
+'xiaoming'||random()*60+10::int,
+(random()*60+10)::int,
+(random()*5+1)::int from (select generate_series(1,100000)) tb_user;
+```
+
+#####  (1) 收集tb_user的统计信息
+
+```sql
+-- 考生作答
+```
+
+##### (2) 为下面两个查询创建索引，让执行计划和索引最为合理
+
+```sql
+SQL1： explain analyze select * from tb_user where age = 29 and stu_name = 'xiaoming';
+
+SQL1: explain analyze select * from tb_user where stu_no = 100 and age = 29;
+```
+
+```sql
+-- 考生作答
+```
+
+##### (3) 在上题目的基础上，用3种不同方式使如下SQL不走索引
+
+```sql
+explain analyze select * from tb_user where stu_no =100 and age =29;
+```
+
+```sql
+-- 考生作答
 ```
 
 
