@@ -39,9 +39,6 @@ moniti2-# from stu;
 正常计算每个学生的总成绩就是select sid,sum(score) from score group by sid，如果要查询学生姓名那就得是select sid,sname,sum(score) from score group by sid,sname
 
 用over的话就是对于大查询来说没有做分组select sid,sname,sum(score) over(partition by sid) from score
-```
-````
-
 ##### (2) 编写函数获取成绩绩点，输入学生id和科目名称，输出对应的绩点值 0~59 给0；60~69给0.1;70~79给0.2; 80~89给0.3; 90~100给0.4
 
 ```sql
@@ -116,11 +113,7 @@ $$ language plpgsql;
 
 ```sql
 moniti2=# 
-select id,
-		(fun_cal_point(id,'math')+fun_cal_point(id,'art')+fun_cal_point(id,'phy')) as gd from 
-		stu 
-where 
-		id like '%3%';
+select id,(fun_cal_point(id,'math')+fun_cal_point(id,'art')+fun_cal_point(id,'phy')) as gd from stu where id like '%3%';
  id | gd
 ----+----
   3 | .4
@@ -194,8 +187,11 @@ select
 	datname,
 	(aclexplode(datacl)).grantee as g,
 	(aclexplode(datacl)).privilege_type as p 
-from pg_database
-where datname not like 'template%';
+from 
+	pg_database
+where 
+	datname 
+not like 'template%';
 
 -- 结果：
 moniti2=# select
@@ -243,7 +239,7 @@ select
 from 
 	information_schema.table_privileges 
 where 
-grantee = 'user1'
+	grantee = 'user1'
 ```
 
 
@@ -257,7 +253,8 @@ select
 	privilege_type 
 from 
 	information_schema.table_privileges 
-where table_name = 'table1';
+where 
+	table_name = 'table1';
 ```
 
 #### 3. 数据库连接
@@ -397,7 +394,9 @@ create view
 			course c,
 			elective e 
 		where 
-			e.sno =s.sno and e.cno = c.cno;
+			e.sno =s.sno 
+		and 
+			e.cno = c.cno;
 ```
 
 ##### (2) 编写函数FUNC_SUM,返回某个学生的分数总和
@@ -449,14 +448,9 @@ create table student(id serial,starttime timestamp(0));
 --考生作答
 create or replace procedure create_student_information(num int) 
 as 
-declare i int;
-id int;
 begin
-	id :=10000;
-	for i in 1..num loop
+	for id in 10000..10000+num-1 loop
 		insert into student values(id,sysdate);
-		id :=id+1；
-		DBE_OUTPUT.PRINT_LINE('id='||id); -- || 用于做字符拼接
 		end loop;
 end;
 /
