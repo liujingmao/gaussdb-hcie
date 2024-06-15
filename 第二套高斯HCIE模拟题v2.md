@@ -41,6 +41,8 @@ moniti2-# from stu;
 用over的话就是对于大查询来说没有做分组select sid,sname,sum(score) over(partition by sid) from score
 ```
 
+
+
 ##### (2) 编写函数获取成绩绩点，输入学生id和科目名称，输出对应的绩点值 0~59 给0；60~69给0.1;70~79给0.2; 80~89给0.3; 90~100给0.4
 
 ```sql
