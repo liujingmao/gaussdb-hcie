@@ -22,7 +22,6 @@ select *,
 	case when art <=avg(art) over() then '不大于' else '大于' end as is_art_bigger,
 	case when phy <=avg(phy) over() then '不大于' else '大于' end as is_phy_bigger
 from stu;
-
 moniti2-# from stu;
  id | math | art | phy | is_math_bigger | is_art_bigger | is_phy_bigger
 ----+------+-----+-----+----------------+---------------+---------------
@@ -32,17 +31,12 @@ moniti2-# from stu;
   4 |   90 |  63 |  76 | 大于           | 大于          | 大于
   5 |   59 |  69 |  79 | 不大于         | 大于          | 大于
 (5 rows)
-```
-```sql
 窗口函数，正常来说所有的聚合函数都是在分组之后计算的对吧，比如常见的count，sum，avg这些，但是openGauss的分组有些问题，就是要单独查询的字段都必须是分组键，这个over的作用相当于是局部的分组，over里面有两个可配置的参数over(partition by c1 order by c1 desc) partition就等价于groupby，orderby就是排序，在聚合函数后面加over表示你的聚合计算是根据后面over指定的分组方式和排序方式得到结果
 
 正常计算每个学生的总成绩就是select sid,sum(score) from score group by sid，如果要查询学生姓名那就得是select sid,sname,sum(score) from score group by sid,sname
 
 用over的话就是对于大查询来说没有做分组select sid,sname,sum(score) over(partition by sid) from score
 ```
-
-
-
 ##### (2) 编写函数获取成绩绩点，输入学生id和科目名称，输出对应的绩点值 0~59 给0；60~69给0.1;70~79给0.2; 80~89给0.3; 90~100给0.4
 
 ```sql
