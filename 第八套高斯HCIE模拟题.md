@@ -297,19 +297,74 @@ create table logger(sname text,dept_naem text,log_date date);
 
 ##### 创建触发器，要求在tab1表插入一行数据时，自动往logger表中插入一条记录，记录sname和部门名称，并用当天的日期来标记该行数的生成时间
 
-##### () 创建触发器函数T_INS_TR
+##### (1) 创建触发器函数T_INS_TR
+
+```sql
+-- 考生作答
+```
 
 ##### (2) 创建触发器T_INS_TR
 
+```sql
+-- 考生作答
+```
+
 ##### (3) 禁用表tab1上的所有触发哭
+
+```sql
+-- 考生作答
+```
 
 ##### (4) 删除触发器T_INS_TR
 
+```sql
+-- 考生作答
+```
+
+
+
 #### 10. 触发器2
+
+##### 根据以下表完成相应触发器创建使用
+
+```sql
+-- create table 
+create table stu(
+	sid integer,
+    sname chaaracter varying(20)
+) with (orientation = row,commpression = no) distribute by hash(sid) to group group_version1;
+
+create table selecttive(
+	sid integer,
+	course_name character varying(20)
+) with (orientation = row,compression = no) distribute by hash(sid) to group group_version1;
+
+-- 数据插入
+
+insert into stu values(1,'tom');
+insert into stu values(2,'marry');
+insert into stu values(3,'lzy');
+
+insert into selecttive values(1,'数学');
+insert into selecttive values(2,'语文');
+insert into selecttive values(1,'英语');
+```
+
+##### 创建触发器，删除stu某一条数据，同时删除selecttive上的相关数据
 
 ##### (1) 创建触发器函数DELETE_STIVE
 
+```sql
+-- 考生作答
+```
+
 ##### (2) 创建触发器DELTE_SELECT_TRIGGER
+
+```sql
+-- 考生作答
+```
+
+
 
 
 
