@@ -4,21 +4,21 @@
 
 ##### 学生表（成绩表里有空值）
 
-| 学生编号 | 成绩 | 月份 |
-| :------- | ---- | ---- |
-| 1        |      |      |
-| 2        |      |      |
-| 3        |      |      |
-| 4        |      |      |
-| 5        |      |      |
-| 6        |      |      |
-|          |      |      |
-|          |      |      |
-|          |      |      |
-|          |      |      |
-|          |      |      |
-|          |      |      |
-|          |      |      |
+| 学生编号   | 成绩  | 月份  |
+| :--------- | ----- | ----- |
+| student_id | score | month |
+| 1          | 56    | 1     |
+| 2          | 68    | 1     |
+| 3          |       | 1     |
+| 4          | 67    | 1     |
+| 5          |       | 1     |
+| 6          | 53    | 1     |
+| 1          | 56    | 2     |
+| 2          | 68    | 2     |
+| 3          |       | 2     |
+| 4          | 67    | 2     |
+| 5          | 99    | 2     |
+| 6          |       | 2     |
 
 
 
@@ -26,15 +26,41 @@
 -- 创建表 
 create table student(id int,score int,month int);
 -- 导入数据 
-insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53,1)
-(1,56,2),(2,68,2),(3,NULL,2),(4,67,2),(5,99,2),(6,NULL,2);
+insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53,1),(1,56,2),(2,68,2),(3,NULL,2),(4,67,2),(5,99,2),(6,NULL,2);
 ```
 
 ##### (1) 查询月考平均成绩比编号5的大的学生信息
 
+```sql
+-- 考生作答
+-- 因为null值不计算，产生将null修改为0
+
+hcie7=# update student set score = 0 where score is null;
+UPDATE 4
+
+select id,avg(score) as a from student group by id having a > (select avg(score) as a from student group by id having id = 5);
+
+ id |          a
+----+---------------------
+  1 | 56.0000000000000000
+  4 | 67.0000000000000000
+  2 | 68.0000000000000000
+
+```
+
 ##### (2) 查询每次月考成绩大于平均成绩的学生
 
+``` sql
+-- 考生作答
+
+```
+
 ##### (3) 查询每次平均成绩差值
+
+```sql
+-- 考生作答
+
+```
 
 #### 2. 数据库对象管理及SQL应用2
 
@@ -46,11 +72,27 @@ insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53
 
 ##### (1) 创建分区表，根据上述字段信息创建分区表，按L_SHIPDATE分区，按年分1993，1994，1995，1996，1997，1998，1999分区名称分别是L_SHIPDATE_1 第二个分区是L_SHIPDATE_2,以此类推，使用L_ORDERKEY进行哈希分布，建表完成执行上述数据导入代码，进行数据导入
 
+```sql
+-- 考生任何
+```
+
 ##### (2) 查看表的schema名称，展示表名和schema名称
+
+```sql
+-- 考生作答
+```
 
 ##### (3) 查看表分布节点的oid,展示表名，nodeoids
 
+```sql
+-- 考生作答
+```
+
 ##### (4) 查看表所在实例的信息
+
+```sql
+-- 考生作答
+```
 
 #### 3. 数据库连接
 
@@ -58,7 +100,6 @@ insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53
 
 ```  sql
 -- 考生作答--
-
 ```
 
 ##### (2) 查询用户的连接数上限
@@ -87,7 +128,7 @@ insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53
 
 ##### (6) 查询所有用户已经使用的会话连接数
 
-```
+```sql
 -- 考生作答，这个会话数量，之前没有遇到过
 ```
 
@@ -107,21 +148,101 @@ insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53
 
 ##### (1) 创建user3用户，密码'test@123'
 
+```sql
+-- 考生作答
+```
+
 ##### (2) 当前有一张表t_test(id,name); 有2万以上的数据，请授权只允许user3能够访问id=3的数据
+
+```sql
+-- 考生作答
+```
 
 ##### (3) 修改赋权能看id=1或者2的数据
 
+```sql
+-- 考生作答
+```
+
 ##### (4) 当前有一张用户表t_user(id,age),请创建两名用户u1和u2,密码均为'test@123'
+
+```sql
+-- 考生作答
+```
 
 ##### (5) 设置行级别访问控制，u1,u2设置只能查看自己的用户信息
 
+```sql
+-- 考生作答
+```
+
 ##### (6) 加一个级别访问控制让u1只能看自己且年龄30以下的数据
+
+```sql
+-- 考生作答
+```
 
 ##### (7) 删除上述配置的所有行级访问控制策略
 
+```sql
+-- 考生作答
+```
+
 ##### (8) 关闭表的行控制开关，并且级联删除用户
 
-#### 5. 存储过程(有异常？)
+```sql
+-- 考生作答
+```
+
+#### 5. 存储过程
+
+| 编号   | 成绩 | 课程 |
+| ------ | ---- | ---- |
+| '1001' | 86   | 'c1' |
+| '1002' | 95   | 'c2' |
+
+```sql
+-- create table 
+create table scoretable(
+	sno varchar(8),
+    score int,
+    course varchar(8)
+);
+
+insert into scoretable values('1001',86,'c1'),('1002',95,'c2');
+```
+
+
+
+```sql
+-- 考生作答
+create or replace procedure get_score_by_course(c in varchar(8),s out int) as 
+begin 
+	select score into s from scoretable where course = c;
+end;
+/
+
+call get_score_by_course('c1',null);
+
+-- 结果：
+hcie7=# create or replace procedure get_score_by_course(c in varchar(8),s out int) as
+hcie7$# begin
+hcie7$# select score into s from scoretable where course = c;
+hcie7$# end;
+hcie7$# /
+CREATE PROCEDURE
+hcie7=# call get_score_by_course('c1',null);
+ s
+----
+ 86
+(1 row)
+
+hcie7=# call get_score_by_course('c2',null);
+ s
+----
+ 95
+(1 row)
+```
 
 #### 6. 触发器
 
@@ -135,21 +256,48 @@ create table teacher(
 	deptnd integer not null,
 	title varchar(50) not null
 );
-
 create table department (
 	id integer primary key,
     name varchar(50) not null,
 	number_of_senior integer default 0);
 	
-insert into teacher values(1,'tom',1,'associate professor'),(2,'bill',1,'professor'),(11,'eiston',3,'associate professor')	
- 
-insert into department values(1,'physical',0),(2,'mathmetrics',0),(3,'chemistry',0);
+根据以下表信息创建Tri_update_D 触发器，如果修改Number_of_senior字段时提示"不能随便修改部门教授职称人数"，如果已经有了Tri_update_D触发器，则删除后再重新创建
+	insert into teacher values(1,'tom',1,'associate professor'),(2,'bill',1,'professor'),(11,'eiston',3,'associate professor');
+ insert into department values(1,'physical',0),(2,'mathmetrics',0),(3,'chemistry',0);
 ```
 
 ##### (1) 创建Tri_update_D 触发器，如果修改Number_of_senior字段时提示"不能随便修改部门教授职称人数"，如果已经有了Tri_update_D触发器，则删除后再重新创建
 
 ```sql
 -- 考生作答
+create or replace function notice() returns trigger as 
+$$
+begin
+	raise notice '不能随便修改部门教授职称人数';
+end;
+$$language plpgsql;
+
+DROP TRIGGER IF EXISTS Tri_update_D ON department;
+create trigger Tri_update_D after update on department for each row execute procedure notice();
+
+-- 结果
+
+hcie7=# create or replace function notice() returns trigger as
+hcie7-# $$
+hcie7$# begin
+hcie7$# raise notice '不能随便修改部门教授职称人数';
+hcie7$# end;
+hcie7$# $$language plpgsql;
+CREATE FUNCTION
+hcie7=# DROP TRIGGER IF EXISTS Tri_update_D ON department;
+DROP TRIGGER
+hcie7=# create trigger Tri_update_D after update on department for each row execute procedure notice();
+CREATE TRIGGER
+hcie7=# update department set number_of_senior = 1;
+NOTICE:  不能随便修改部门教授职称人数
+ERROR:  control reached end of trigger procedure without RETURN
+CONTEXT:  PL/pgSQL function notice()
+hcie7=#
 ```
 
 ##### (2) 禁止触发器，修改department表中id=1的number_of_senior=10,并查出表中的数据 
@@ -170,11 +318,27 @@ insert into department values(1,'physical',0),(2,'mathmetrics',0),(3,'chemistry'
 
 ##### (1) 用union查询输出student所有列，score1和score2的score,grade列，按照id升序，成绩降序
 
+```sql
+-- 考生作答
+```
+
 ##### (2) 对以上SQL语句进行优化
+
+```sql
+-- 考生作答
+```
 
 ##### (3) 查看两个班级相同的科目，202201班在score1中存在的成绩，要求使用not in
 
+```sql
+-- 考生作答
+```
+
 ##### (4) 对以上SQL进行优化
+
+```sql
+-- 考生作答
+```
 
 ####　8. 论述
 
