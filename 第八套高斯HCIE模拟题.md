@@ -42,15 +42,26 @@ union all
 ##### (2) 输出每次月考缺考的学生信息，要求打印姓名、班级编号和缺考次数
 
 ```sql
+-- 考生作答
 ```
-
-
 
 ##### (3) 输出每次月考和tom同时缺考的所有学生信息，要求打印学号、姓名和月考部分
 
+```sql
+-- 考生作答
+```
+
 ##### (4) 输出全校月考中位数分数
 
+```sql
+-- 考生作答
+```
+
 ##### (5) 统计每个班月考的最高分数，要求打印班级名称，考试时间和月考次数
+
+```sql
+-- 考生作答
+```
 
 #### 2. SQL应用2
 
@@ -58,9 +69,21 @@ union all
 
 ##### (1) 输出class1班级中比班级class2班级每月月考最低分还低的学生信息，要求打印学号、姓名和月考部分。
 
+```sql
+-- 考生作答
+```
+
 ##### (2) 打印月考总分平均最高的学生信息，输出 学号，姓名和月考总分平均分
 
+```sql
+-- 考生作答
+```
+
 ##### (3) 输出每个学生月考平均分和最高月考平均分学生之间的分数差距，打印学号、姓名、月考平均分和差距分数。
+
+```sql
+-- 考生作答
+```
 
 #### 3. SQL应用3
 
@@ -215,33 +238,9 @@ select (chinese+math) as cm,(english+music) as en from scopes;
 
 ```sql
 -- 考生作答
-
-select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1;
- student_id | weight_id | weight_sum
-------------+-----------+------------
-          1 |         1 |      91.00
-          2 |         1 |      93.70
-          3 |         1 |      90.20
-          4 |         1 |      89.80
-          5 |         1 |      90.20
-          6 |         1 |      86.80
-         
-
-moniti8=# select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2;
- student_id | weight_id | weight_sum
-------------+-----------+------------
-          1 |         2 |      92.00
-          2 |         2 |      96.00
-          3 |         2 |      91.30
-          4 |         2 |      89.40
-          5 |         2 |      89.80
-          6 |         2 |      85.00
-(6 rows)
-
 -- Ans
  select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 from (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id;
 (6 rows)
-
 select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 from (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id;
  student_id | weight_sum1 | weight_sum2
 ------------+-------------+-------------
@@ -261,28 +260,62 @@ moniti8=#
 
 **最终效果如下**
 
-| student_id | weight_sum1 | weight_rank | weight_sum2 | weight_rank |
-| ---------- | ----------- | ----------- | ----------- | ----------- |
-| 1          | 87.7        | 1           | 67.7        | 1           |
-| 2          | 78.8        | 2           | 66.7        | 2           |
+| student_id | weight_sum1 | weight_rank1 | weight_sum2 | weight_rank2 |
+| ---------- | ----------- | ------------ | ----------- | ------------ |
+| 1          | 87.7        | 1            | 67.7        | 1            |
+| 2          | 78.8        | 2            | 66.7        | 2            |
 
 ```sql
 -- 考生作答
+select t3.student_id,t3.weight_sum1,dense_rank() over (partition by 1 order by t3.weight_sum1 desc) as weight_rank1,t3.weight_sum2,dense_rank() over (partition by 1 order by t3.weight_sum2 desc) as weight_rank2 from
+(select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 from (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id) t3;
+
+ student_id | weight_sum1 | weight_rank1 | weight_sum2 | weight_rank2
+------------+-------------+--------------+-------------+--------------
+          2 |       93.70 |            1 |       96.00 |            1
+          1 |       91.00 |            2 |       92.00 |            2
+          3 |       90.20 |            3 |       91.30 |            3
+          5 |       90.20 |            3 |       89.80 |            4
+          4 |       89.80 |            4 |       89.40 |            5
+          6 |       86.80 |            5 |       85.00 |            6
+
 ```
 
 #### 5. 性能优化1
 
-##### 当前有一张表create table test(student_id,int,class_id int,kemu varchar2(20),score int); 有8w条数据
+##### 当前有一张表create table test(student_id int,class_id int,kemu varchar2(20),score int); 有8w条数据
 
 ```sql
 -- 插入数据
+insert into test values(1,202202,'yuwen',88);
+insert into test values(2,202202,'shuxue',100);
+insert into test values(3,202201,'yuwen',88);
+insert into test values(4,202202,'wuli',90);
+insert into test values(5,202201,'yuwen',88);
+insert into test values(6,202202,'shuxue',88);
+insert into test values(7,202201,'yuwen',75);
+insert into test values(8,202202,'yuwen',80);
+insert into test values(9,202201,'yuwen',99);
+insert into test values(10,202202,'yuwen',100);
 ```
 
 ##### (1) 查202202班级同一科目成绩比202201班级最高分的同学，根据以下SQL优化重写。
 
 ```sql
 -- 原SQL: 
-select * from test where score > (select max(score) from test where class_id) and class_id = '202202';
+select 
+	* 
+from 
+	test 
+where 
+	score > (select max(score) from test where class_id='202201') 
+and 
+	class_id = '202202';
+```
+
+```sql
+-- 考生作答
+
 ```
 
 #### 6. 性能优化2
@@ -363,7 +396,6 @@ create table score(sno varchar(20),courid int,score int);
 insert into student values('1001','张三',1),('1002','李四',1),('1003','王五',2),('1004','赵六',2);
 insert into class values(1,'1 班'),(2,'2 班');
 insert into course values(1,'语文'),(2,'数学'),(3,'英语'),(4,'物理');
-
 insert into score values('1001',1,84),('1001',1,64),('1001',2,86),('1001',2,94);
 insert into score values('1001',3,84),('1001',3,56),('1001',4,48),('1001',4,84);
 insert into score values('1002',1,83),('1002',1,85),('1002',2,46),('1002',2,74);
@@ -448,7 +480,7 @@ end;
 -- create table stuv3(sno varchar(30),math float,art float,physical float,cno int);
 ```
 
-#### 9. 触发器1
+#### 9. 触发器1(暂时没有做出来)
 
 ##### 本题根据以下表完成相应触发器创建使用
 
