@@ -15,7 +15,7 @@ create table class(cno int,cname varchar(20));
 -- insert data
 insert into class values(1,'class1'),(2,'class2');
 
-insert into student values();
+insert into student values(1,'Lee',610,1,1),(2,'Jerry',510,1,1),(5,'Lee',410,1,1),(3,'Tom',400,1,2),(4,'Jack',300,1,2),(6,'Jacy',NULL,1,2),(1,'Lee',410,2,1),(2,'Jerry',510,2,1),(5,'Lee',210,2,1),(3,'Tom',600,2,2),(4,'Jack',300,2,2),(6,'Jacy',510,2,2),(1,'Lee',410,3,1),(2,'Jerry',510,3,1),(5,'Lee',NULL,3,1),(3,'Tom',NULL,3,2),(4,'Jack',300,3,2),(6,'Jacy',410,3,2);
 ```
 
 ##### (1) 输出每月月考部分都比学号为5的同学分数高的所有学生信息
@@ -237,10 +237,18 @@ create table course(courid int,courname varchar(50));
 create table score(sno varchar(20),courid int,score int);
 
 -- insert data
-insert into student values();
-insert into class values();
-insert into course values();
-insert into score values();
+insert into student values('1001','张三',1),('1002','李四',1),('1003','王五',2),('1004','赵六',2);
+insert into class values(1,'1 班'),(2,'2 班');
+insert into course values(1,'语文'),(2,'数学'),(3,'英语'),(4,'物理');
+insert into score values('1001',1,84),('1001',1,64),('1001',2,86),('1001',2,94);
+insert into score values('1001',3,84),('1001',3,56),('1001',4,48),('1001',4,84);
+insert into score values('1002',1,83),('1002',1,85),('1002',2,46),('1002',2,74);
+
+insert into score values('1002',3,65),('1002',3,76),('1002',4,56),('1002',4,98);
+insert into score values('1003',1,86),('1003',1,74),('1003',2,88),('1003',2,54);
+insert into score values('1003',3,86),('1003',3,76),('1003',4,67),('1003',4,76);
+insert into score values('1004',1,100),('1004',1,100),('1004',2,87),('1004',2,86);
+insert into score values('1004',3,69),('1004',3,67),('1004',4,84),('1004',4,92);
 ```
 
 ##### (1) 语文平均成绩大于80的所有成绩，输出班级名，学号(或班级号)，平均成绩，要求使用两where非相关的子查询 
