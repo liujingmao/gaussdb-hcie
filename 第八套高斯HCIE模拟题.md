@@ -20,7 +20,31 @@ insert into student values(1,'Lee',610,1,1),(2,'Jerry',510,1,1),(5,'Lee',410,1,1
 
 ##### (1) 输出每月月考部分都比学号为5的同学分数高的所有学生信息
 
+```sql
+select 
+	* 
+from 
+	student 
+where 
+	month =1 
+and 
+	score > (select score from student where sno = 5 and month = 1) 
+union all 
+	( select 
+     	* 
+     from 
+    	 student 
+     where month =2 
+     and 
+     	score > (select score from student where sno = 5 and month = 2));
+```
+
 ##### (2) 输出每次月考缺考的学生信息，要求打印姓名、班级编号和缺考次数
+
+```sql
+```
+
+
 
 ##### (3) 输出每次月考和tom同时缺考的所有学生信息，要求打印学号、姓名和月考部分
 
@@ -68,18 +92,46 @@ insert into stu values(10,59,49,89,65);
 
 ```sql
 -- 考生作答
+select id,(math+phy) as sum_mp,(art+music) as sum_am from stu;
+ id | sum_mp | sum_am
+----+--------+--------
+  1 |    126 |    119
+  2 |    147 |    128
+  3 |    136 |    116
+  4 |    166 |    128
+  5 |    138 |    164
+  6 |    129 |    109
+  7 |    149 |    128
+  8 |    138 |    116
+  9 |    118 |    118
+ 10 |    148 |    114
 ```
 
 ##### (2) 计算学生总成绩，并基于总成绩排序
 
 ``` sql
 -- 考生作答
+select id,sum(math+art+phy+music) as g from stu group by id order by g desc;
+ id |  g
+----+-----
+  5 | 302
+  4 | 294
+  7 | 277
+  2 | 275
+ 10 | 262
+  8 | 254
+  3 | 252
+  1 | 245
+  6 | 238
+  9 | 236
+(10 rows)
 ```
 
 ##### (3) art和music总分排名前5名的总成绩加5分，查询最终的所有学生总成绩
 
 ```sql
 -- 考生作答
+select id,(math+art+phy+music+5) from stu where id in (select id from (select id,(art+music) as am from stu order by am desc limit 5));
 ```
 
 #### 4. SQL应用4
@@ -88,7 +140,7 @@ insert into stu values(10,59,49,89,65);
 
 ```sql
 -- create table
-create table scopes(student_id int,chinese int,math int english int,music int);
+create table scopes(student_id int,chinese int,math int,english int,music int);
 -- load data
 insert into scopes values(1,90,88,100,88);
 insert into scopes values(2,88,88,100,99);
@@ -102,14 +154,23 @@ insert into scopes values(6,93,88,76,87);
 
 ```sql
 -- 考生作答
+select (chinese+math) as cm,(english+music) as en from scopes;
+ cm  | en
+-----+-----
+ 178 | 188
+ 176 | 199
+ 176 | 187
+ 179 | 175
+ 180 | 176
+ 181 | 163
 ```
 
-##### (2) 目前有一张权重表(),请算出每个学生结合权重的成绩总和。要求一条SQL语句实现，不能使用临时表。每个学生都对应权限成绩。
+##### (2) 目前有一张权重表(各科有不同的权重，目前权重策略有2个),请算出每个学生结合权重的成绩总和。要求一条SQL语句实现，不能使用临时表。每个学生都对应权限成绩。
 
 + 权限表结构如下
 
   ```sql
-  create table weight(weight_id int,chinese decimal(10,2),math decimal(10,2),engish decimal(10,2), music decimal(10,2));
+  create table weight(weight_id int,chinese decimal(10,2),math decimal(10,2),english decimal(10,2), music decimal(10,2));
   
   insert into weight values(1,0.3,0.2,0.2,0.3);
   insert into weight values(2,0.2,0.1,0.3,0.4);
@@ -126,7 +187,21 @@ insert into scopes values(6,93,88,76,87);
 
   ```sql
   -- 考生作答
-  
+   select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w;
+   student_id | weight_id | weight_sum
+  ------------+-----------+------------
+            1 |         1 |      91.00
+            1 |         2 |      92.00
+            2 |         1 |      93.70
+            2 |         2 |      96.00
+            3 |         1 |      90.20
+            3 |         2 |      91.30
+            4 |         1 |      89.80
+            4 |         2 |      89.40
+            5 |         1 |      90.20
+            5 |         2 |      89.80
+            6 |         1 |      86.80
+            6 |         2 |      85.00
   ```
 
 ##### (3) 结合上面的结果，将一个学生对应的两个权重成绩，合到一行。要求一条SQL语句实现，不能使用临时表
@@ -138,6 +213,50 @@ insert into scopes values(6,93,88,76,87);
 | 1    | 1          | 87.7        | 67.7        |
 | 2    | 2          | 78.8        | 66.7        |
 
+```sql
+-- 考生作答
+
+select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1;
+ student_id | weight_id | weight_sum
+------------+-----------+------------
+          1 |         1 |      91.00
+          2 |         1 |      93.70
+          3 |         1 |      90.20
+          4 |         1 |      89.80
+          5 |         1 |      90.20
+          6 |         1 |      86.80
+         
+
+moniti8=# select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2;
+ student_id | weight_id | weight_sum
+------------+-----------+------------
+          1 |         2 |      92.00
+          2 |         2 |      96.00
+          3 |         2 |      91.30
+          4 |         2 |      89.40
+          5 |         2 |      89.80
+          6 |         2 |      85.00
+(6 rows)
+
+-- Ans
+ select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 from (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id;
+(6 rows)
+
+select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 from (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id;
+ student_id | weight_sum1 | weight_sum2
+------------+-------------+-------------
+          1 |       91.00 |       92.00
+          2 |       93.70 |       96.00
+          3 |       90.20 |       91.30
+          4 |       89.80 |       89.40
+          5 |       90.20 |       89.80
+          6 |       86.80 |       85.00
+(6 rows)
+
+moniti8=#
+
+```
+
 ##### (4)按照两个权重成绩之和的大小，进行从大到小排序，且生成排序序号，要求生成连续排序序号，相同的值有相同的序号。一条SQL语句实现，不能使用临时表。
 
 **最终效果如下**
@@ -146,6 +265,10 @@ insert into scopes values(6,93,88,76,87);
 | ---------- | ----------- | ----------- | ----------- | ----------- |
 | 1          | 87.7        | 1           | 67.7        | 1           |
 | 2          | 78.8        | 2           | 66.7        | 2           |
+
+```sql
+-- 考生作答
+```
 
 #### 5. 性能优化1
 
