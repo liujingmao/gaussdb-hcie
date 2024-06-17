@@ -274,11 +274,34 @@ create or replace function notice() returns trigger as
 $$
 begin
 	raise notice '不能随便修改部门教授职称人数';
+	return null;
 end;
 $$language plpgsql;
 
 DROP TRIGGER IF EXISTS Tri_update_D ON department;
 create trigger Tri_update_D after update on department for each row execute procedure notice();
+
+hcie2=# update department set number_of_senior = 1;
+NOTICE:  不能随便修改部门教授职称人数
+NOTICE:  不能随便修改部门教授职称人数
+NOTICE:  不能随便修改部门教授职称人数
+
+
+create trigger Tri_update_D before update of number_of_senior on department for each row execute procedure notice();
+
+hcie2=# update department set number_of_senior = 1;
+NOTICE:  不能随便修改部门教授职称人数
+NOTICE:  不能随便修改部门教授职称人数
+NOTICE:  不能随便修改部门教授职称人数
+
+
+create trigger Tri_update_D before update of number_of_senior on department for each statement execute procedure notice();
+
+hcie2=# update department set number_of_senior = 1;
+NOTICE:  不能随便修改部门教授职称人数
+UPDATE 3
+hcie2=# update department set number_of_senior = 10;
+NOTICE:  不能随便修改部门教授职称人数
 
 -- 结果
 
@@ -304,12 +327,31 @@ hcie7=#
 
 ```sql
 -- 考生作答
+alter table department disable trigger Tri_update_D;
+hcie2=# update department set number_of_senior = 0;
+UPDATE 3
+hcie2=# update department set number_of_senior = 10 where id =1;
+UPDATE 1
+hcie2=# select * from department;
+ id |    name     | number_of_senior 
+----+-------------+------------------
+  1 | physical    |               10
+  2 | mathmetrics |                0
+  3 | chemistry   |                0
+
 ```
 
 ##### (3) 启动触发器，修改department表中id=1的number_of_senior=20
 
 ```sql
 -- 考生作答
+hcie2=# alter table department enable trigger Tri_update_D;
+ALTER TABLE
+hcie2=# update department set number_of_senior = 20 where id =1;
+NOTICE:  不能随便修改部门教授职称人数
+UPDATE 1
+hcie2=# 
+
 ```
 
 #### 7. 性能优化
