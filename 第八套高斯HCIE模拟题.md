@@ -363,10 +363,10 @@ create table score(sno varchar(20),courid int,score int);
 insert into student values('1001','张三',1),('1002','李四',1),('1003','王五',2),('1004','赵六',2);
 insert into class values(1,'1 班'),(2,'2 班');
 insert into course values(1,'语文'),(2,'数学'),(3,'英语'),(4,'物理');
+
 insert into score values('1001',1,84),('1001',1,64),('1001',2,86),('1001',2,94);
 insert into score values('1001',3,84),('1001',3,56),('1001',4,48),('1001',4,84);
 insert into score values('1002',1,83),('1002',1,85),('1002',2,46),('1002',2,74);
-
 insert into score values('1002',3,65),('1002',3,76),('1002',4,56),('1002',4,98);
 insert into score values('1003',1,86),('1003',1,74),('1003',2,88),('1003',2,54);
 insert into score values('1003',3,86),('1003',3,76),('1003',4,67),('1003',4,76);
@@ -374,10 +374,17 @@ insert into score values('1004',1,100),('1004',1,100),('1004',2,87),('1004',2,86
 insert into score values('1004',3,69),('1004',3,67),('1004',4,84),('1004',4,92);
 ```
 
+
+
 ##### (1) 语文平均成绩大于80的所有成绩，输出班级名，学号(或班级号)，平均成绩，要求使用两where非相关的子查询 
 
 ```sql
 -- 考生作答
+
+-- create table student(sno varchar(20),sname varchar(50),cno int);
+-- create table class(cno int,cname varchar(50));
+-- create table course(courid int,courname varchar(50));
+-- create table score(sno varchar(20),courid int,score int);
 ```
 
 ##### (2) 在上一题基础上，使用from查询优化
@@ -397,22 +404,48 @@ insert into score values('1004',3,69),('1004',3,67),('1004',4,84),('1004',4,92);
 ##### 当前有一张表stu(sno,math,art,physical,cno)
 
 ```sql
-create table stu(sno varchar(30),math float,art float,physical float,cno int);
-insert into stu values('1001',56,85,72,1),('1002',66,75,82,1);
+create table stuv3(sno varchar(30),math float,art float,physical float,cno int);
+insert into stuv3 values('1001',56,85,72,1),('1002',66,75,82,1),('1003',87,76,88,2);
 ```
 
 ##### (1) 查看学生每门成绩与每门平均成绩的差值
+
+```sql
+-- 考生作答
+select t1.sno,(t1.math-t2.m) as diff_math_avgm,(t1.art-t2.a) as diff_art_avga,(t1.physical-t2.p) as diff_phy_avgp from stuv3 t1,(select avg(math) as m,avg(art) as a,avg(physical) as p from stuv3) t2;
+```
 
 ##### (2) 编写存储过程，输入学生id和科目名称输出对应的绩点值，0-59 给0，60-69给0.1,70-79给0.2, 80-89给0.3,90-100给0.4
 
 ```sql
 -- 考生作答
+create or replace procedure get_grade_by_score(inputscore inout float) as
+begin
+	select (case when inputscore <=59 then 0 when inputscore <=69 then 0.1 when inputscore <=79 then 0.2 when inputscore <=89 then 0.3 when inputscore <=100 then 0.4 else -1 end) into inputscore;
+end;
+/
+
+create or replace procedure fun_cal_point(id1 in varchar(20),coursename varchar(30),grade out float) as
+begin
+   	case when coursename='math' then select (get_grade_by_score(math)) into grade from stuv3 where sno=id1;
+	when coursename='art' then select (get_grade_by_score(art)) into grade from stuv3 where sno=id1;
+	when coursename='physical' then select (get_grade_by_score(physical)) into grade from stuv3 where sno=id1;
+else raise notice 'please input right course name;';
+end case;
+end;
+/
 ```
 
 ##### (3) 编写存储过程，根据学号，班级，获取学生的总分
 
 ```sql
 -- 考生作答
+create or replace procedure get_total_score_by_no_cno(id1 in varchar(20),cno1 in int,sum_score out int) as 
+begin
+	select (math+art+physical) into sum_score from stuv3 where sno = id1 and cno = cno1;
+end;
+/
+-- create table stuv3(sno varchar(30),math float,art float,physical float,cno int);
 ```
 
 #### 9. 触发器1
@@ -423,7 +456,13 @@ insert into stu values('1001',56,85,72,1),('1002',66,75,82,1);
 -- creat table
 create table tab1(sname text,deptno int,salary float,title text);
 create table dept(id int,dept_name text);
-create table logger(sname text,dept_naem text,log_date date);
+create table logger(sname text,dept_name text,log_date date);
+
+-- import datas
+
+insert into tab1 values('a',1,1000.00,'teacher'),('b',2,2000,'professor');
+insert into dept values(1,'M'),(2,'C');
+insert into logger('a','M',202304),('b','C',202202)
 ```
 
 ##### 创建触发器，要求在tab1表插入一行数据时，自动往logger表中插入一条记录，记录sname和部门名称，并用当天的日期来标记该行数的生成时间
@@ -432,24 +471,37 @@ create table logger(sname text,dept_naem text,log_date date);
 
 ```sql
 -- 考生作答
+CREATE OR REPLACE FUNCTION T_INS_TR() RETURNS TRIGGER AS 
+$$  
+BEGIN  
+    INSERT INTO logger(sname, dept_name, log_date) SELECT (NEW.sname,d.dept_name,sysdate) FROM dept d WHERE d.id = NEW.deptno;  
+    RETURN NEW;  
+END;  
+$$
+ LANGUAGE plpgsql;  
 ```
 
 ##### (2) 创建触发器T_INS_TR
 
 ```sql
 -- 考生作答
+CREATE TRIGGER T_INS_TR AFTER INSERT ON tab1 FOR EACH ROW EXECUTE procedure T_INS_TR();
 ```
 
-##### (3) 禁用表tab1上的所有触发哭
+##### (3) 禁用表tab1上的所有触发器
 
 ```sql
 -- 考生作答
+
+ALTER TRIGGER T_INS_TR ON tab1 DISABLE;
+
 ```
 
 ##### (4) 删除触发器T_INS_TR
 
 ```sql
 -- 考生作答
+DROP TRIGGER T_INS_TR
 ```
 
 
@@ -460,9 +512,9 @@ create table logger(sname text,dept_naem text,log_date date);
 
 ```sql
 -- create table 
-create table stu(
+create table stuv2(
 	sid integer,
-    sname chaaracter varying(20)
+    sname character varying(20)
 ) with (orientation = row,commpression = no) distribute by hash(sid) to group group_version1;
 
 create table selecttive(
@@ -470,15 +522,26 @@ create table selecttive(
 	course_name character varying(20)
 ) with (orientation = row,compression = no) distribute by hash(sid) to group group_version1;
 
+-- 单节点db创建表
+create table stuv2(
+	sid integer,
+    sname character varying(20)
+);
+
+create table selecttive(
+	sid integer,
+	course_name character varying(20)
+);
+
 -- 数据插入
 
-insert into stu values(1,'tom');
-insert into stu values(2,'marry');
-insert into stu values(3,'lzy');
+insert into stuv2 values(1,'tom');
+insert into stuv2 values(2,'marry');
+insert into stuv2 values(3,'lzy');
 
 insert into selecttive values(1,'数学');
 insert into selecttive values(2,'语文');
-insert into selecttive values(1,'英语');
+insert into selecttive values(3,'英语');
 ```
 
 ##### 创建触发器，删除stu某一条数据，同时删除selecttive上的相关数据
@@ -487,12 +550,20 @@ insert into selecttive values(1,'英语');
 
 ```sql
 -- 考生作答
+create or replace function DELETE_STIVE() returns trigger as 
+$$
+begin
+	delete from selecttive where sid = old.sid;
+	return old;
+end;
+$$language plpgsql;
 ```
 
 ##### (2) 创建触发器DELTE_SELECT_TRIGGER
 
 ```sql
 -- 考生作答
+create trigger DELTE_SELECT_TRIGGER before delete on stuv2 for each row execute procedure DELETE_STIVE();
 ```
 
 
