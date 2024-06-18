@@ -376,19 +376,53 @@ CREATE TABLE ELECTIVE(
 #####  (1) 创建SELECT_SD，查看学生成绩信息，查看学生姓名，课程名称，课程成绩
 
 ```sql
--- 
+-- 考生作答
+create view 
+	SELECT_SD 
+as 
+	select 
+		sname,
+		cname,
+		grade
+	from 
+		student s,
+		course c,
+		electve e 
+	where 
+		e.sno = s.sno 
+	and 
+		e.cno = c.cno;
 ```
 
 #####  (2) 编写函数FUNC_SUM,根据传递的学生的学生编号或者姓名返回某个学生的分类总和
 
 ```sql
--- 
+-- 考生作答
+create or replace function FUNC_SUM(stuid int) returns integer as 
+$$
+declare result integer;
+begin
+	select sum(grade) into result from elective where sno = stuid;
+	return result;
+end;
+$$language plpgsql
 ```
 
 #####  (3) 创建触发器DELETE_ELE,在STUDENT表上绑定触发器DELETE_ELE，在删除表中某个学生时，将ELECTIVE表中该学生的选课记录一并删除
 
 ```sql
--- 
+-- 考生作答
+-- 删除elective表记录的函数
+create or replace function func_delete_ele() returns trigger as 
+$$
+begin
+	delete from elective where sno = old.sno;
+	return old;
+end;
+$$language plpgsql
+
+-- 绑定到student表的触发器
+create trigger delete_ele before delete on student for each row execute procedure func_delete_ele();
 ```
 
 ##### 6. 游标
@@ -447,7 +481,34 @@ insert into DEPARTMENT values(40,'自动化学院'),(50,'管理学院');
 #####  (1) 创建存储过程pro_curs_1,使用游标打印各部门总人数，按照人数降序排序，打印格式如下 ：部门名称1---人数部门名称2---人数打印操作可以使用DBE_OUTPUTPRINT_LINE(outputstr)接口
 
 ```sql
--- 
+-- 考生作答
+create or replace procedure pro_curs_1()
+as
+declare cursor cur1 is select d.name as dn,count(*) as pc from teacher t,department d where t.deptno=d.id group by d.name orger by pc desc;
+begin
+	for i cur1 loop
+		DBE_OUTPUTPRINT_LINE(concat(i.dn,'---',i.pc::varchar));-- 分布式条件才能使用该函数
+	end loop;
+end;
+call pro_curs_1()
+
+create or replace procedure pro_curs_1()
+as
+declare cursor cur1 is
+select d.name as dn,count(*) as pc from teacher t,department d
+where t.deptno = d.id group by d.name order by pc desc;
+begin
+for i in cur1 loop
+raise notice '%-%',i.dn,i.pc;   -- 单节点集群暂时用这个方法解决这个问题
+end loop;
+end;
+moniti1$# /
+CREATE PROCEDURE
+moniti1=# call  pro_curs_1();
+NOTICE:  计算机学院-2
+NOTICE:  机电工程学院-2
+ pro_curs_1
+------------
 ```
 
 
@@ -455,7 +516,47 @@ insert into DEPARTMENT values(40,'自动化学院'),(50,'管理学院');
 #####  (2) 创建存储过程pro_curs_2,使用游标读取薪水按降序排序的前三位老师和后三位老师的信息，分别获取ID，姓名，部门名称，薪水和职称，请按以下格式打印ID-姓名-部门名称-薪水-职称
 
 ```sql
---
+-- 考生作答
+create or replace procedure pro_curs_2()
+as 
+declare cursor cur1 is 
+select
+	t.id,
+	t.name,
+	d.name,
+	t.salary,
+	t.title
+from
+	((select * from teacher order by salary desc limit 3) 
+     	union all
+     (select * from teacher order by salary limit 3)) t 
+     	join department d on t.deptno = d.id;
+begin
+	for i in cur1 loop
+		DBE_OUTPUTPRINT_LINE(concat(i.id::varchar,'-',i.sname,'-',i.dname,'-',i.salary::varchar,'-',i.title));
+	end loop;
+end;
+
+create or replace procedure pro_curs_2()
+as 
+declare cursor cur1 is 
+select
+	t.id as tid,
+	t.name as tname,
+	d.name as dname,
+	t.salary,
+	t.title
+from
+	((select * from teacher order by salary desc limit 3) 
+     	union all
+     (select * from teacher order by salary limit 3)) t 
+     	join department d on t.deptno = d.id;
+begin
+	for i in cur1 loop
+		raise notice '%-%-%-%-%',i.tid,i.tname,i.dname,i.salary,i.title; -- %参数点位符号
+	end loop;
+end;
+/
 ```
 
 ##### 7. 性能调优
@@ -480,7 +581,7 @@ create table tb_user(
 
 -- insert data
 insert into 
-	tb_user select id,'xiaoing'||(random()*60+10)::int,
+	tb_user select id,'xiaoming'||(random()*60+10)::int,
 	(random()*60+10)::int,
 	(random()*5+1)::int 
 from 
@@ -502,7 +603,14 @@ SQL2: explain analyze select * from tb_user where stu_no = 100 and age = 29;
 ```
 
 ```sql
--- 作答区
+-- 考生作答
+SQL1:
+select gs_index_advise('select * from tb_user where age=29 and stu_name = "xiaoming"');
+create index index_name1 on tb_user(age,stu_name);
+                       
+SQL2:
+select gs_index_advise('select * from tb_user where stu_no = 100 and age = 29');
+create index index_name2 on tb_user(stu_no,age);
 ```
 
 ##### (3) 在上题的基础上，用3种不同的方式使如下SQL不走索引
@@ -513,6 +621,33 @@ explain analyze select * from tb_user where stu_no = 100 and age =29;
 
 ```sql
 -- 作答区
+-- 考生作答
+-- 方法1. 通过hint干预优化不走索引
+SQL1: 
+explain anylyze 
+select
+	/* + tablescan(tb_user) */tb_user.age,tb_user.stu_name 
+from
+	tb_user 
+where 
+	age = 29
+and 
+	stu_name = 'xiaoming';
+SQL2:
+explain anylyze 
+select
+	/* + tablescan(tb_user) */ tb_user.stu_no,tb_user.age 
+from
+	tb_user 
+where 
+	stu_no=100
+and 
+	age = 29;
+-- 方法2.增大index开销
+set cpu_index_tuple_cost = 100000
+-- 方法3.直接禁用索引
+alter index index_name1 unusable;
+alter index index_name2 unusable;
 ```
 
 ##### 8. 论述题
