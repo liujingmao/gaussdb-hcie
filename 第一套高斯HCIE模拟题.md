@@ -597,8 +597,8 @@ and
 -- 方法2.增大index开销
 set cpu_index_tuple_cost = 100000
 -- 方法3.直接禁用索引
-alter tb_user index_name1 unusable;
-alter tb_user index_name2 unusable;
+alter index index_name1 unusable;
+alter index index_name2 unusable;
 ```
 
 #### 8. 论述
