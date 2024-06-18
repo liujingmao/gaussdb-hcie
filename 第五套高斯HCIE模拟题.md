@@ -248,31 +248,135 @@ select datname,datconnlimit from pg_database where datname = 'postgres';
 
 ##### (5) 查询postgres数据库中用户已经使用的会话数量
 
+```sql
+-- 已经使用的会话--之前不知道如何处理
+select count(datname) from pg_stat_activity where datanme = 'postgres';
+-- 结果
+hcie5=# select count(datname) from pg_stat_activity where datname = 'postgres';
+ count
+-------
+     7
+(1 row)
+
+-- 查询已经结束的会话数量
+select count(datname) from pg_stat_activity where datname = 'postgres' and state = 'idle';
+```
+
 ##### (6) 查询所有用户已经使用的会话连接数
+
+```sql
+-- 这个也不知。。。。
+select count(datname) from pg_stat_activity;
+```
 
 ##### (7) 查询库的最大连接数
 
+```sql
+-- 
+hcie5=# show max_connections;
+ max_connections
+-----------------
+ 1000
+(1 row)
+```
+
 ##### (8) 查询会话状态，显示datid,pid和state
+
+```sql
+-- 
+hcie5=# select datid,pid,state from pg_stat_activity;
+ datid |       pid       | state
+-------+-----------------+--------
+ 65618 | 140513148008192 | active
+ 15707 | 140514016884480 | idle
+ 15707 | 140514049914624 | active
+ 15707 | 140514106013440 | active
+ 15707 | 140514158442240 | idle
+ 15707 | 140514125412096 | idle
+ 15707 | 140514198243072 | idle
+ 15707 | 140514248587008 | active
+```
 
 #### 4. 安全审计
 
 ##### (1) 创建用户user3,密码是'test@123'
 
+```sql
+create user user3 password 'test@123';
+-- 结果
+hcie5=# create user user3 password 'test@123';
+CREATE ROLE
+```
+
 ##### (2) 给用户授予查看审计权限
+
+```sql
+-- 作答区
+hcie5=# alter user user3 with auditadmin;
+ALTER ROLE
+```
 
 ##### (3) 登录postgres， 创建统一审计策略adt1,对所有数据库执行create审计操作
 
+```sql
+openGauss=# create audit policy adt1 privileges create;
+CREATE AUDIT POLICY
+```
+
 ##### (4) 登录postgres, 创建审计策略adt2,对所有数据库执行select审计操作
+
+```sql
+create audit policy adt2 access select;
+CREATE AUDIT POLICY
+```
 
 ##### (5) 创建postgres, 创建表tb1,创建审计策略adt3,仅审计记录用户root,在执行针对表tb1资源进行select,insert,delete操作数据库创建审计策略
 
+```sql
+create resource label rl_for_adt3 add table(tb1);
+CREATE RESOURCE LABEL
+openGauss=# create audit policy adt3 access select on label(rl_for_adt3),insert on label(rl_for_adt3),delete on label(rl_for_adt3) filter on roles(omm);
+CREATE AUDIT POLICY
+openGauss=# create audit policy adtroot access select on label(rl_for_adt3),insert on label(rl_for_adt3),delete on label(rl_for_adt3) filter on roles(root);
+ERROR:  role: [root] is invalid
+openGauss=#
+```
+
 ##### (6) 为统一审计对象adt1,增加描述'audit policy for tb1'
+
+```sql
+openGauss=# alter audit policy adt1 comments 'audit policy for tb1';
+ALTER AUDIT POLICY
+```
 
 ##### (7) 修改adt1，使之对地址IP地址为'10.20.30.40'的场景生效
 
+```sql
+alter audit policy adt1 modify (filter on ip('10.20.30.40'));
+ALTER AUDIT POLICY
+```
+
 ##### (8) 禁用统一审计策略adt1
 
+```sql
+alter audit policy adt1 disable;
+```
+
 ##### (9)  删除审计策略adt1 adt2 adt3 和相应的资源标签，联级删除用户user3
+
+```sql
+openGauss=# drop audit policy adt1;
+DROP AUDIT POLICY
+openGauss=# drop audit policy adt2;
+DROP AUDIT POLICY
+openGauss=# drop audit policy adt3;
+drop resource label rl_for_adt3;
+DROP AUDIT POLICY
+drop user user3 cascade;
+
+```
+
+
 
 #### 5. 存储过程
 
