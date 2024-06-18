@@ -61,14 +61,40 @@ from
 
 ```sql
 -- 考生作答
-select *, (case when age < 18 then 'group1' when age <35 then 'group2' when age < 55 then 'group3' else 'group4' end) as age_group from residents;
+select 
+	*, 
+	(case when age < 18 then 'group1' 
+     	  when age <35 then 'group2' 
+     	  when age < 55 then 'group3' 
+     	  else 'group4' end) as age_group 
+from 
+	residents;
 ```
 
 ##### (3) age_group 按每组人数排序，查询出age_group、人数，最大年龄，最小年龄，平均年龄(平均年龄向下取整)
 
 ```sql
 -- 考生作答
-hcie5=# select t.age_group,count(age) "人数",max(age) "最大年龄",min(age) "最小年龄",floor(avg(age)) "平均年龄" from(select age, (case when age < 18 then 'group1' when age <35 then 'group2' when age < 55 then 'group3' else 'group4' end) as age_group from residents) t group by age_group order by "人数" desc;
+hcie5=# 
+select 
+	age_group,
+	count(age) "人数",
+	max(age) "最大年龄",
+	min(age) "最小年龄",
+	floor(avg(age)) "平均年龄" 
+from
+	(select 
+     	age, 
+     	(case when age < 18 then 'group1' 
+              when age <35 then 'group2' 
+              when age < 55 then 'group3' 
+         	  else 'group4' end) as age_group 
+      from residents) t 
+ group by 
+ 	age_group 
+ order by 
+ 	"人数" 
+ desc;
  age_group | 人数 | 最大年龄 | 最小年龄 | 平均年龄
 -----------+------+----------+----------+----------
  group2    |    8 |       34 |       24 |       28
@@ -115,43 +141,10 @@ hcie5=#
 ##### (5) 按第栋求出每栋楼所需要的营养值 
 
 ```sql
-hcie5=# select buiding, (case when age < 18 then 'group1' when age <35 then 'group2' when age < 55 then 'group3' else 'group4' end) as age_group from residents;                                         
-buiding | age_group
----------+-----------
-       2 | group1
-       3 | group2
-       5 | group2
-       9 | group2
-      10 | group2
-       7 | group2
-       6 | group1
-      12 | group2
-      13 | group2
-      13 | group3
-      12 | group3
-      12 | group2
-      13 | group1
-       3 | group1
-       4 | group1
-       2 | group4
-       1 | group3
-       2 | group3
-(18 rows)
-
-hcie5=# select * from nutrition;
- age_group | nutrition_value
------------+-----------------
- group1    |               5
- group2    |               7
- group3    |               6
- group4    |               5
- 
- 
 select t1.buiding,sum(nutrition_value) from (select buiding, (case when age < 18 then 'group1' when age <35 then 'group2' when age < 55 then 'group3' else 'group4' end) as age_group from residents) t1,nutrition t2 where t2.age_group=t1.age_group group by t1.buiding;
  
  -- 老师给的答案
- 
- 
+  
 select buiding,sum(nutrition_value) from (select buiding, (case when age < 18 then 'group1' when age <35 then 'group2' when age < 55 then 'group3' else 'group4' end) as age_group from residents) t1,nutrition t2 where t2.age_group=t1.age_group group by buiding;
 
 -- 结果 
@@ -187,8 +180,6 @@ hcie5=# select buiding,sum(nutrition_value) from (select buiding, (case when age
        2 |  16
 (11 rows)
 
- 
- 
 -- 考生作答
 select t2.age_group,sum(t2.nutrition_value*t1.n) from (select t.age_group,count(age) as n from(select age, (case when age < 18 then 'group1' when age <35 then 'group2' when age < 55 then 'group3' else 'group4' end) as age_group from residents) t group by age_group) t1,nutrition t2 where t1.age_group = t2.age_group group by t2.age_group order by sum desc;
 -- 结果
@@ -373,7 +364,6 @@ openGauss=# drop audit policy adt3;
 drop resource label rl_for_adt3;
 DROP AUDIT POLICY
 drop user user3 cascade;
-
 ```
 
 
