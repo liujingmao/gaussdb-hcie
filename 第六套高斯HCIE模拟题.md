@@ -5,6 +5,13 @@
 ##### 基于以下学生成绩表，完成以下实验要求
 
 ```sql
+	id int primary key not null,  -- 编号 
+    firstname varchar(50) not null, -- 姓名 
+	familyname varchar(50) not null, -- 姓氏
+    shorterform varchar(50) not null, -- 简称
+    mark char(1) not null, -- 标识
+    score int not null -- 成绩
+
 -- 创建表
 create table su(
 	id int primary key not null,
@@ -22,13 +29,13 @@ create table su(
  (5,'elizeberth','katharine','elizabeth','H',67);
 ```
 
-##### (1) 请查询姓名和姓氏，并以姓名和格式输出，要求首字母大写，姓名和姓氏之间使用'.'拼接
+##### (1) 请查询姓名和姓氏，并以姓名.姓氏输出，要求首字母大写，姓名和姓氏之间使用'.'拼接
 
 ```sql
 -- 
 ```
 
-##### (2)插入一条数据(),当出现主键冲突时，将mark修改为'F'
+##### (2)插入一条数据(2,'tom','jerry','tom','H',63),当出现主键冲突时，将mark修改为'F'
 
 ```sql
 --
@@ -70,28 +77,136 @@ L_TRANSPORTROUTE CHAR(32) NOT NULL
 L_COMMENT VARCHAR(64) NOT NULL
 ```
 
+```sql
+-- 导入数据
+insert into lineitem values(.....);
+```
+
 ##### (1) 创建分区表，根据上述字段信息表创建分区表，按L_SHIPDATE分区，按年分1993，1994，1995，1996，1997，1998，1999，分区名字分别是L_SHIPDATE_1,L_SHIPDATE_2,以此类推，使用L_ORDERKEY进行哈希分布，建表完成执行上方数据导入代码，进行数据导入
 
 ```sql
--- 
+-- create table 
+create table lineitem(L_ORDERKEY BIGINT NOT NULL,
+L_PARTKEY BIGINT NOT NULL,
+L_SUPPKEY BIGINT NOT NULL,
+L_LINENUMBER BIGINT NOT NULL,
+L_QUANTITY float8 NOT NULL,
+L_EXTENDEPPRICE float8 NOT NULL,
+L_DISCOUNT float8 NOT NULL,
+L_TAX float8 NOT NULL,
+L_RETURNFLAG CHAR(1) NOT NULL,
+L_LINESTATUS CHAR(1) NOT NULL,
+L_SHIPDATE DATE NOT NULL,
+L_COMMITDATE DATE NOT NULL,
+L_ARRIVALDATE DATE NOT NULL,
+L_ORDERSTRATEGY CHAR(32) NOT NULL,
+L_TRANSPORTROUTE CHAR(32) NOT NULL,
+L_COMMENT VARCHAR(64) NOT NULL) distribute by hash(L_ORDERKEY) partition by range(L_SHIPDATE)(
+	partitioin L_SHIPDATE_1 values,
+    partitioin L_SHIPDATE_2 values,
+    partitioin L_SHIPDATE_3 values,
+    partitioin L_SHIPDATE_4 values,
+    partitioin L_SHIPDATE_5 values,
+    partitioin L_SHIPDATE_6 values,
+    partitioin L_SHIPDATE_7 values);
 ```
 
 ##### (2) 查询表的schema名称，展示表名，schema名称
 
 ```sql
 -- 
+hcie6=# select tablename,schemaname from pg_tables where tablename = 'lineitem';
+ tablename | schemaname
+-----------+------------
+ lineitem  | public
+(1 row)
 ```
 
 ##### (3) 查看表分布节点的oid,展示表名，nodeoids
 
 ```sql
--- 
+-- 考生作答
+select 
+	t1.relname,
+	t2.nodeoids 
+from 
+	pg_class t1,
+	pgxc_class t2,
+	pg_namespace t3 
+where 
+	t1.oid = t2.pcrelid 
+and 
+	t1.relnamespace = t3.oid 
+and 
+	t1.relname = 'lineitem'
+and 
+	t3.nspname = 'public';
+-- 结果 
+hcie6=# select
+hcie6-# t1.relname,
+hcie6-# t2.nodeoids
+hcie6-# from
+hcie6-# pg_class t1,
+hcie6-# pgxc_class t2,
+hcie6-# pg_namespace t3
+hcie6-# where
+hcie6-# t1.oid = t2.pcrelid
+hcie6-# and
+hcie6-# t1.relnamespace = t3.oid
+hcie6-# and
+hcie6-# t1.relname = 'lineitem'
+hcie6-# and
+hcie6-# t3.nspname = 'public';
+ relname | nodeoids
+---------+----------
+(0 rows)
 ```
 
 ##### (4)  查看表所在的实例的信息
 
 ```sql
--- 
+-- 考生作答
+select 
+	t4.* 
+from 
+	pg_class t1,
+	pgxc_class t2,
+	pg_namespace t3,
+	pgxc_node t4
+where
+	t1.oid = t2.pcrelid
+and
+	t1.relnamespace = t3.oid 
+and 
+	cast(t2.nodeoids as varchar(20)) = cast(t4.oid as varchar(20)) 
+and
+	t1.relname = 'lineitem'
+and 
+	t3.nspname = 'public';
+-- 结果 hcie6=# select
+hcie6-# t4.*
+hcie6-# from
+hcie6-# pg_class t1,
+hcie6-# pgxc_class t2,
+hcie6-# pg_namespace t3,
+hcie6-# pgxc_node t4
+hcie6-# where
+hcie6-# t1.oid = t2.pcrelid
+hcie6-# and
+hcie6-# t1.relnamespace = t3.oid
+hcie6-# and
+hcie6-# cast(t2.nodeoids as varchar(20)) = cast(t4.oid as varchar(20))
+hcie6-# and
+hcie6-# t1.relname = 'lineitem'
+hcie6-# and
+hcie6-# t3.nspname = 'public';
+ node_name | node_type | node_port | node_host | node_port1 | node_host1 | host
+is_primary | nodeis_primary | nodeis_preferred | node_id | sctp_port | control_
+port | sctp_port1 | control_port1 | nodeis_central | nodeis_active
+-----------+-----------+-----------+-----------+------------+------------+-----
+-----------+----------------+------------------+---------+-----------+---------
+-----+------------+---------------+----------------+---------------
+(0 rows)
 ```
 
 ##### 3. 用户及权限管理
@@ -99,49 +214,76 @@ L_COMMENT VARCHAR(64) NOT NULL
 ##### (1) 使用两个查询语句，查看'postgres'数据库的最大连接数和已使用连接数
 
 ```sql
--- 
+-- 作答区
+hcie6=# select datname,datconnlimit from pg_database where datname = 'postgres';
+ datname  | datconnlimit
+----------+--------------
+ postgres |           -1
 ```
 
 ##### (2) 创建用户user_test,并指定该用户具有创建数据库和创建角色的权限 
 
 ```sql
--- 
+-- 作答区
+create user user_test with sysadmin password 'Huawei@123';
 ```
 
 ##### (3) 创建表table_test,此表包含一个名为col_test的列，为用户user_test授权在table_test表的col_test列上的查询、更新权限
 
 ```sql
--- 
+-- 作答区
+hcie6=# create table table_test(col_test int);
+CREATE TABLE
+hcie6=# grant select,update on table table_test to user_test;
+GRANT
 ```
 
 ##### (4) 收回用户user_test在table_test列的更新权限
 
 ```sql
--- 
+-- 作答区
+hcie6=# revoke update on table table_test from user_test;
+REVOKE
+hcie6=#
 ```
 
 ##### (5) 创建角色role_test,此角色拥有审计权限
 
 ```sql
--- 
+-- 作答区
+-- alter role role_test with auditadmin;
+ALTER ROLE
 ```
 
 ##### (6) 将角色role_test的权限授权给用户user_test,并允许用户将此权限再授权给其他用户或者角色 
 
 ```sql
--- 
+-- 作答区
+grant role_test to user_test with admin option;
 ```
 
 ##### (7) 用户user_test账号被盗，请手动锁定此账号
 
 ```sql
-
+-- 作答区
+hcie6=# alter user user_test account lock;
+ALTER ROLE
+hcie6=# \c - user_test;
+Password for user user_test:
+FATAL:  The account has been locked.
+Previous connection kept
 ```
 
 ##### (8) 级联删除用户user_test,并重新创建，将账号设置为在2023年国庆期间有效
 
 ```sql
--- 
+-- 作答区
+hcie6=# alter user user_test account unlock;
+ALTER ROLE
+hcie6=# drop user user_test cascade;
+DROP ROLE
+hcie6=# create user user_test password 'Huawei@123' valid begin '2023-10-01' valid until '2023-10-07';
+CREATE ROLE
 ```
 
 ##### 4. 行级访问控制
@@ -167,37 +309,41 @@ insert into bank_card values('00000000006','储蓄卡',1);
 ##### (1) 创建用户crecar_mger,savcard_mger,密码均为'Test@123'
 
 ```sql
--- 
+-- 作答区
+create user crecar_mger password 'Test@123';
+create user savcard_mger password 'Test@123';
 ```
 
 ##### (2) 给上题中创建的两个用户授予bank_card表的读取权限
 
 ```sql
--- 
+-- 作答区
+grant select on bank_card to crecar_mger,savcard_mger;
 ```
 
 ##### (3) 打开bank_card表的行级访问控制开关
 
 ```sql
--- 
+-- 作答区
+alter table bank_card enable row level security;
 ```
 
 ##### (4) 创建行级访问控制策略bank_card_rls,要求crecard_mger用户只能查看信用卡信息，sacard_mger用户只能查看储蓄卡信息。
 
 ```sql
--- 
+-- 作答区
 ```
 
 ##### (5) 切换到crecard_mger用户查看bank_card表的内容
 
 ```sql
--- 
+-- 作答区
 ```
 
 ##### (6) 使用root用户删除行级控制策略bank_card_rls,并关闭表的行级访问控制开关
 
 ```sql
--- 
+-- 作答区
 ```
 
 ##### 5. 触发器
@@ -342,6 +488,11 @@ from
 ```
 
 ##### (1) 收集tb_user的统计信息
+
+```sql
+-- 作答区
+analyze tb_user;
+```
 
 ##### (2) 为下面两个查询语句创建索引，让执行计划和索引最合理
 
