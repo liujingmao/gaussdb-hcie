@@ -32,25 +32,43 @@ create table su(
 ##### (1) 请查询姓名和姓氏，并以姓名.姓氏输出，要求首字母大写，姓名和姓氏之间使用'.'拼接
 
 ```sql
--- 
+-- 作答区
+select initcap(firstname||'.'||familyname) from su;
 ```
 
 ##### (2)插入一条数据(2,'tom','jerry','tom','H',63),当出现主键冲突时，将mark修改为'F'
 
 ```sql
---
+-- 作答区
+insert into su values(2,'tom','jerry','tom','H',63) on duplicate key update mark = 'F';
 ```
 
-##### (3) 查询表，检查姓名是否sec开关，展示姓名，判断结果为result.
+##### (3) 查询表，检查姓名是否sec开头，展示姓名，判断结果为result.
 
 ```sql
--- 
+-- 作答区
+select firstname,(case when firstname like 'sec%' then 'True' else 'False' end) as result from su;
+ firstname  | result
+------------+--------
+ secebbie   | True
+ amanda     | False
+ homas      | False
+ elizeberth | False
+ tom        | False
 ```
 
-##### (4) 查询表中所有列的数据，按照成绩进行排序，并显示名次(position),名次为连接的。要求展示所有字段，名字字段position
+##### (4) 查询表中所有列的数据，按照成绩进行排序，并显示名次(position),名次为连连续的。要求展示所有字段，名字字段position
 
 ```sql
--- 
+-- 作答区
+hcie6=# select *,dense_rank() over(order by score desc) as position from su;    id | firstname  | familyname | shorterform | mark | score | position
+----+------------+------------+-------------+------+-------+----------
+  1 | secebbie   | peter      | peter       | S    |    86 |        1
+  3 | amanda     | lee        | lee         | H    |    67 |        2
+  4 | homas      | brooke     | homas       | H    |    67 |        2
+  5 | elizeberth | katharine  | elizabeth   | H    |    67 |        2
+  2 | tom        | jerry      | tom         | F    |    63 |        3
+
 ```
 
 ##### 2. 数据库对象管理及SQL语法2
@@ -102,13 +120,13 @@ L_ARRIVALDATE DATE NOT NULL,
 L_ORDERSTRATEGY CHAR(32) NOT NULL,
 L_TRANSPORTROUTE CHAR(32) NOT NULL,
 L_COMMENT VARCHAR(64) NOT NULL) distribute by hash(L_ORDERKEY) partition by range(L_SHIPDATE)(
-	partitioin L_SHIPDATE_1 values,
-    partitioin L_SHIPDATE_2 values,
-    partitioin L_SHIPDATE_3 values,
-    partitioin L_SHIPDATE_4 values,
-    partitioin L_SHIPDATE_5 values,
-    partitioin L_SHIPDATE_6 values,
-    partitioin L_SHIPDATE_7 values);
+	partitioin L_SHIPDATE_1 values less than('1993'),
+    partitioin L_SHIPDATE_2 values less than('1994'),
+    partitioin L_SHIPDATE_3 values less than('1995'),
+    partitioin L_SHIPDATE_4 values less than('1996'),
+    partitioin L_SHIPDATE_5 values less than('1997'),
+    partitioin L_SHIPDATE_6 values less than('1998'),
+    partitioin L_SHIPDATE_7 values less than('1999'));--云数据库在练
 ```
 
 ##### (2) 查询表的schema名称，展示表名，schema名称
@@ -219,6 +237,8 @@ hcie6=# select datname,datconnlimit from pg_database where datname = 'postgres';
  datname  | datconnlimit
 ----------+--------------
  postgres |           -1
+ -- 已使用连接数不会
+ select datname,count(*) from pg_stat_activity where datname = 'postgres' group by datname;
 ```
 
 ##### (2) 创建用户user_test,并指定该用户具有创建数据库和创建角色的权限 
@@ -226,6 +246,8 @@ hcie6=# select datname,datconnlimit from pg_database where datname = 'postgres';
 ```sql
 -- 作答区
 create user user_test with sysadmin password 'Huawei@123';
+-- 老师给的答案
+create user user_test createdb createrole password 'Huawei@123';
 ```
 
 ##### (3) 创建表table_test,此表包含一个名为col_test的列，为用户user_test授权在table_test表的col_test列上的查询、更新权限
@@ -236,6 +258,7 @@ hcie6=# create table table_test(col_test int);
 CREATE TABLE
 hcie6=# grant select,update on table table_test to user_test;
 GRANT
+-- grant select(col_test),update(col_test) on table table_test to user_test;
 ```
 
 ##### (4) 收回用户user_test在table_test列的更新权限
@@ -245,14 +268,15 @@ GRANT
 hcie6=# revoke update on table table_test from user_test;
 REVOKE
 hcie6=#
+-- ans
+revoke update(col_test) on table table_test from user_test;
 ```
 
 ##### (5) 创建角色role_test,此角色拥有审计权限
 
 ```sql
 -- 作答区
--- alter role role_test with auditadmin;
-ALTER ROLE
+create role role_test password 'Huawei@123' auditadmin poladmin;
 ```
 
 ##### (6) 将角色role_test的权限授权给用户user_test,并允许用户将此权限再授权给其他用户或者角色 
@@ -284,6 +308,8 @@ hcie6=# drop user user_test cascade;
 DROP ROLE
 hcie6=# create user user_test password 'Huawei@123' valid begin '2023-10-01' valid until '2023-10-07';
 CREATE ROLE
+
+create user user_test password 'Huawei@123' valid begin '2023-10-01 00:00:00' valid until '2023-10-07 23:59:59';
 ```
 
 ##### 4. 行级访问控制
@@ -310,15 +336,17 @@ insert into bank_card values('00000000006','储蓄卡',1);
 
 ```sql
 -- 作答区
-create user crecar_mger password 'Test@123';
+create user crecard_mger password 'Test@123';
 create user savcard_mger password 'Test@123';
 ```
 
 ##### (2) 给上题中创建的两个用户授予bank_card表的读取权限
 
 ```sql
+-- ans add:
+grant usage on schema public to crecard_mger,savcard_mger;
 -- 作答区
-grant select on bank_card to crecar_mger,savcard_mger;
+grant select on bank_card to crecard_mger,savcard_mger;
 ```
 
 ##### (3) 打开bank_card表的行级访问控制开关
@@ -330,20 +358,72 @@ alter table bank_card enable row level security;
 
 ##### (4) 创建行级访问控制策略bank_card_rls,要求crecard_mger用户只能查看信用卡信息，sacard_mger用户只能查看储蓄卡信息。
 
+##### + -- 这个有点难
+
 ```sql
 -- 作答区
+create row level security policy bank_card_rls on bank_card to crecard_mger,savcard_mger using(b_type = case when current_user='crecard_mger' then '信用卡' else '储蓄卡' end);
 ```
 
 ##### (5) 切换到crecard_mger用户查看bank_card表的内容
 
 ```sql
 -- 作答区
+hcie6=# \c - crecard_mger
+Password for user crecard_mger:
+Non-SSL connection (SSL connection is recommended when requiring high-security)
+You are now connected to database "hcie6" as user "crecard_mger".
+hcie6=> \d
+                                       List of relations
+ Schema |    Name    | Type  | Owner |                         Storage
+
+--------+------------+-------+-------+-----------------------------------------
+-----------------
+ public | bank_card  | table |       | {orientation=row,compression=no,enable_r
+owsecurity=true}
+ public | lineitem   | table |       | {orientation=row,compression=no}
+ public | su         | table |       | {orientation=row,compression=no}
+ public | table_test | table |       | {orientation=row,compression=no}
+ public | tb_user    | table |       | {orientation=row,compression=no}
+(5 rows)
+
+hcie6=> select * from bank_card;
+                 b_number                 |      b_type       | b_c_id
+------------------------------------------+-------------------+--------
+ 00000000001                              | 信用卡            |      1
+ 00000000002                              | 信用卡            |      3
+ 00000000003                              | 信用卡            |      5
+ 00000000004                              | 信用卡            |      7
+(4 rows)
+
+hcie6=> \c - savcard_mger
+Password for user savcard_mger:
+Non-SSL connection (SSL connection is recommended when requiring high-security)
+You are now connected to database "hcie6" as user "savcard_mger".
+hcie6=> select * from bank_card;
+                 b_number                 |      b_type       | b_c_id
+------------------------------------------+-------------------+--------
+ 00000000005                              | 储蓄卡            |      9
+ 00000000006                              | 储蓄卡            |      1
+(2 rows)
+
+hcie6=>
+
 ```
 
 ##### (6) 使用root用户删除行级控制策略bank_card_rls,并关闭表的行级访问控制开关
 
 ```sql
 -- 作答区
+drop row level security policy bank_card_rls on bank_card;
+alter bank_card disable row level security;
+--结果：
+hcie6=# drop row level security policy bank_card_rls on bank_card;
+DROP ROW LEVEL SECURITY POLICY
+hcie6=# alter table bank_card disable row level security;
+ALTER TABLE
+hcie6=#
+
 ```
 
 ##### 5. 触发器
@@ -511,8 +591,6 @@ NOTICE:  机电工程学院-2
 ------------
 ```
 
-
-
 #####  (2) 创建存储过程pro_curs_2,使用游标读取薪水按降序排序的前三位老师和后三位老师的信息，分别获取ID，姓名，部门名称，薪水和职称，请按以下格式打印ID-姓名-部门名称-薪水-职称
 
 ```sql
@@ -624,7 +702,7 @@ explain analyze select * from tb_user where stu_no = 100 and age =29;
 -- 考生作答
 -- 方法1. 通过hint干预优化不走索引
 SQL1: 
-explain anylyze 
+explain analyze 
 select
 	/* + tablescan(tb_user) */tb_user.age,tb_user.stu_name 
 from
@@ -634,7 +712,7 @@ where
 and 
 	stu_name = 'xiaoming';
 SQL2:
-explain anylyze 
+explain analyze 
 select
 	/* + tablescan(tb_user) */ tb_user.stu_no,tb_user.age 
 from
