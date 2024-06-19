@@ -287,7 +287,7 @@ NOTICE:  不能随便修改部门教授职称人数
 NOTICE:  不能随便修改部门教授职称人数
 
 
-create trigger Tri_update_D before update of number_of_senior on department for each row execute procedure notice();
+create trigger Tri_update_D before update of number_of_senior on department for each row execute procedure notice(); -- 对于each row，
 
 hcie2=# update department set number_of_senior = 1;
 NOTICE:  不能随便修改部门教授职称人数
@@ -356,30 +356,145 @@ hcie2=#
 
 #### 7. 性能优化
 
-##### 当前有三个表，分别是学生信息表student() 和 202201班级成绩表score1(id,course,score),202202班级成绩表score2结构与score1相同
+##### 当前有三个表，分别是学生信息表student(id,name,sex,class) 和 202201班级成绩表score1(id,course,score),202202班级成绩表score2结构与score1相同
 
-##### (1) 用union查询输出student所有列，score1和score2的score,grade列，按照id升序，成绩降序
+```sql
+create table student2(
+	id int,
+    name varchar(12),
+    sex char(2),
+    class varchar(8));
+
+create table score1(
+	id int,
+    course varchar(8),
+    score int
+);
+
+create table score2(
+	id int,
+    course varchar(8),
+    score int
+);
+
+-- import data
+
+insert into student2 values(1,'a','F','202201');
+insert into student2 values(2,'b','F','202202');
+insert into student2 values(3,'c','M','202201');
+insert into student2 values(4,'d','F','202202');
+insert into student2 values(5,'e','M','202201');
+insert into student2 values(6,'f','M','202202');
+insert into student2 values(7,'g','M','202201');
+insert into student2 values(8,'h','F','202201');
+
+insert into score1 values(1,'yuwen',88),(1,'math',98);
+insert into score1 values(3,'yuwen',86),(3,'math',88);
+insert into score1 values(5,'yuwen',56),(5,'math',76);
+insert into score1 values(7,'yuwen',89),(7,'math',46);
+insert into score1 values(8,'yuwen',79),(8,'math',86);
+
+
+insert into score2 values(2,'yuwen',76),(2,'math',90);
+insert into score2 values(4,'yuwen',75),(4,'math',100);
+insert into score2 values(6,'yuwen',85),(6,'math',99);
+
+```
+
+
+
+##### (1) 用union查询输出student所有列，score1和score2的course,grade列，按照id升序，成绩降序
 
 ```sql
 -- 考生作答
+(select 
+ 	t1.*,
+ 	t2.course,
+ 	t2.score 
+from 
+ 	student2 t1 
+join 
+ 	score1 t2 
+on t1.id = t2.id) 
+union 
+(select 
+ 	t3.*,
+ 	t4.course,
+ 	t4.score 
+ from 
+ 	student2 t3 
+ join 
+ 	score2 t4 
+ on 
+ 	t3.id = t4.id)
+order by id,score desc;
 ```
 
 ##### (2) 对以上SQL语句进行优化
 
 ```sql
 -- 考生作答
+-- 考生作答
+(select 
+ 	t1.*,
+ 	t2.course,
+ 	t2.score 
+from 
+ 	student2 t1 
+join 
+ 	score1 t2 
+on t1.id = t2.id) 
+union all --- 因为在不同的班级里，可以使用union all
+(select 
+ 	t3.*,
+ 	t4.course,
+ 	t4.score 
+ from 
+ 	student2 t3 
+ join 
+ 	score2 t4 
+ on 
+ 	t3.id = t4.id)
+order by id score desc;
 ```
 
 ##### (3) 查看两个班级相同的科目，202201班在score1中存在的成绩，要求使用not in
 
 ```sql
 -- 考生作答
+select 
+	course,
+	score 
+from 
+	score1 
+where 
+	score 
+not in ( select 
+        	score 
+        from 
+        	score2 
+        where 
+        	score2.course = score1.course);
 ```
 
 ##### (4) 对以上SQL进行优化
 
 ```sql
 -- 考生作答
+select 
+	course,
+	score 
+from 
+	score1 
+where not exists 
+	(select 
+     	score 
+    from 
+     	score2 
+    where 
+     	score2.course = score1.course
+     and 
+     	score2.score = score1.score);
 ```
 
 ####　8. 论述
