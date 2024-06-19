@@ -67,31 +67,131 @@ select id,avg(score) as a from student group by id having a > (select avg(score)
 ##### 当前有一张订单表lineitem,具体字段如下
 
 ```sql
--- 字段说明
+-- 字段说明--
+L_ORDERKEY BIGINT NOT NULL
+L_PARTKEY BIGINT NOT NULL
+L_SUPPKEY BIGINT NOT NULL
+L_LINENUMBER BIGINT NOT NULL
+L_QUANTITY float8 NOT NULL
+L_EXTENDEPPRICE float8 NOT NULL
+L_DISCOUNT float8 NOT NULL
+L_TAX float8 NOT NULL
+L_RETURNFLAG CHAR(1) NOT NULL
+L_LINESTATUS CHAR(1) NOT NULL
+L_SHIPDATE DATE NOT NULL
+L_COMMITDATE DATA NOT NULL
+L_ARRIVALDATE DATA NOT NULL
+L_ORDERSTRATEGY CHAR(32) NOT NULL
+L_TRANSPORTROUTE CHAR(32) NOT NULL
+L_COMMENT VARCHAR(64) NOT NULL
 ```
 
 ##### (1) 创建分区表，根据上述字段信息创建分区表，按L_SHIPDATE分区，按年分1993，1994，1995，1996，1997，1998，1999分区名称分别是L_SHIPDATE_1 第二个分区是L_SHIPDATE_2,以此类推，使用L_ORDERKEY进行哈希分布，建表完成执行上述数据导入代码，进行数据导入
 
 ```sql
--- 考生任何
+-- 考生作答
+-- 创建分布式分区表的格式要学会
+create table (c1,c2...cn) 
+distribute by hash(cn) 
+partition by range(c2)
+(
+	partition partitionname1 values less than (),
+
+
+
+
+);-- 去主机到了，要记得练习
+
+-- create tabel 
+
+-- create table 
+create table lineitem(L_ORDERKEY BIGINT NOT NULL,
+L_PARTKEY BIGINT NOT NULL,
+L_SUPPKEY BIGINT NOT NULL,
+L_LINENUMBER BIGINT NOT NULL,
+L_QUANTITY float8 NOT NULL,
+L_EXTENDEPPRICE float8 NOT NULL,
+L_DISCOUNT float8 NOT NULL,
+L_TAX float8 NOT NULL,
+L_RETURNFLAG CHAR(1) NOT NULL,
+L_LINESTATUS CHAR(1) NOT NULL,
+L_SHIPDATE DATE NOT NULL,
+L_COMMITDATE DATE NOT NULL,
+L_ARRIVALDATE DATE NOT NULL,
+L_ORDERSTRATEGY CHAR(32) NOT NULL,
+L_TRANSPORTROUTE CHAR(32) NOT NULL,
+L_COMMENT VARCHAR(64) NOT NULL) 
+distribute by hash(L_ORDERKEY) 
+partition by range(L_SHIPDATE)(
+	partitioin L_SHIPDATE_1 values less than('1993-01-01'),
+    partitioin L_SHIPDATE_2 values less than('1994-01-01'),
+    partitioin L_SHIPDATE_3 values less than('1995-01-01-01-01'),
+    partitioin L_SHIPDATE_4 values less than('1996-01-01'),
+    partitioin L_SHIPDATE_5 values less than('1997-01-01'),
+    partitioin L_SHIPDATE_6 values less than('1998-01-01'),
+    partitioin L_SHIPDATE_7 values less than('1999-01-01'));--云数据库在练
 ```
 
 ##### (2) 查看表的schema名称，展示表名和schema名称
 
 ```sql
 -- 考生作答
+select 
+	tablename,
+	schemaname 
+from 
+	pg_tables 
+where 
+	tablename = 'lineitem';
 ```
 
 ##### (3) 查看表分布节点的oid,展示表名，nodeoids
 
 ```sql
 -- 考生作答
+select t1.relname,
+	   t3.nodeoids 
+from 
+	pg_class t1,
+	pg_namespace t2,
+	pgxc_class t3 
+where 
+	t1.oid = t3.pcrelid 
+and 
+	t1.relnamespace = t2.oid 
+and 
+	relname = 'lineitem' 
+and 
+	nspname = 'public';
+
+-- 涉及三个系统表 pg_class pg_namespace pgxc_class
+-- 关联条件两个  pg_class.oid = pgxc_class.pcrelid 
+			   pg_class.relnamespace = pg_namespace.oid
+			   
+-- 两个过滤条件  
 ```
 
 ##### (4) 查看表所在实例的信息
 
 ```sql
 -- 考生作答
+select 
+	t4.* 
+from 
+	pg_class t1,
+	pgxc_class t2,
+	pg_namespace t3,
+	pgxc_node t4
+where
+	t1.oid = t2.pcrelid
+and
+	t1.relnamespace = t3.oid 
+and 
+	cast(t2.nodeoids as varchar(20)) = cast(t4.oid as varchar(20)) 
+and
+	t1.relname = 'lineitem'
+and 
+	t3.nspname = 'public';
 ```
 
 #### 3. 数据库连接
@@ -538,7 +638,7 @@ union all --- 因为在不同的班级里，可以使用union all
 order by id score desc;
 ```
 
-##### (3) 查看两个班级相同的科目，202201班在score1中存在的成绩，要求使用not in
+##### (3) 查看两个班级相同的科目，202201班在score1中不存在的成绩，要求使用not in
 
 ```sql
 -- 考生作答
