@@ -274,9 +274,15 @@ create table scoretable(
 );
 
 insert into scoretable values('1001',86,'c1'),('1002',95,'c2');
+
+create table score(
+	sno varchar(20),
+    score int,
+    course varchar(20)
+);
 ```
 
-
+##### (1) 要求输入c1返回该课程的成绩信息(课程和id本身带有单引号)
 
 ```sql
 -- 考生作答
@@ -306,6 +312,16 @@ hcie7=# call get_score_by_course('c2',null);
 ----
  95
 (1 row)
+
+-- 老师提供的答案
+
+create or replace procedure get_score_by_cid(cid_score inout varchar(20)) as
+begin
+	cid_score = concat('''',cid_score,'''');
+	select score into cid_score from score where cid = cid_score;
+end;
+/
+call get_score_by_cid('c1');
 ```
 
 #### 6. 触发器
