@@ -154,6 +154,7 @@ select id,sum(math+art+phy+music) as g from stu group by id order by g desc;
 
 ```sql
 -- 考生作答
+-- 子查询
 select 
 	id,
 	(math+art+phy+music+5) as sum_score
@@ -174,10 +175,23 @@ in
          	am 
          desc limit 5));
          
- select id,(art+music) as am from stu order by am desc limit 5 join (select id,(math+art+phy+music+5) from stu) t on stu.id = t.id;
- 
- 
-select t2.id,(math+art+phy+music+5) as total_score from stu t1 join (select id,(art+music) as am from stu order by am desc limit 5) t2 on t1.id = t2.id;
+ -- join 方法  
+   
+select 
+	t1.id,
+	(math+art+phy+music+5) as total_score
+from 
+	stu t1 
+join 
+	(select 
+     	id,
+     	(art+music) as am 
+     from
+     	stu 
+     order by 
+     	am 
+     desc limit 5) t2 
+on t1.id = t2.id;
  id | total_score
 ----+-------------
   1 |         250
@@ -241,7 +255,11 @@ select (chinese+math) as cm,(english+music) as en from scopes;
 
   ```sql
   -- 考生作答
-   select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w;
+   select 
+   	s.student_id,
+   	w.weight_id,		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from 
+   	scopes s,
+   	weight w;
    student_id | weight_id | weight_sum
   ------------+-----------+------------
             1 |         1 |      91.00
@@ -597,7 +615,6 @@ create table selecttive(
 );
 
 -- 数据插入
-
 insert into stuv2 values(1,'tom');
 insert into stuv2 values(2,'marry');
 insert into stuv2 values(3,'lzy');
