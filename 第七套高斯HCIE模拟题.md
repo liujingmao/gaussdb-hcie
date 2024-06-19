@@ -35,16 +35,21 @@ insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53
 -- 考生作答
 -- 因为null值不计算，产生将null修改为0
 
-hcie7=# update student set score = 0 where score is null;
-UPDATE 4
-
-select id,avg(score) as a from student group by id having a > (select avg(score) as a from student group by id having id = 5);
-
- id |          a
-----+---------------------
-  1 | 56.0000000000000000
-  4 | 67.0000000000000000
-  2 | 68.0000000000000000
+hcie7=# select id,round(avg(nvl(score,0)),2) as a from student group by id having a > (select round(avg(nvl(score,0)),2) as a from student where id = 5);
+ id |   a
+----+-------
+  1 | 56.00
+  4 | 67.00
+  2 | 68.00
+(3 rows) 
+  -- ans
+  
+select id,round((avg(nvl(score,0))),2) as avgscore from student group by id having avgscore > (select round((avg(nvl(score,0))),2) from student where id = 5);
+ id | avgscore
+----+----------
+  1 |    56.00
+  4 |    67.00
+  2 |    68.00
 
 ```
 
@@ -53,12 +58,75 @@ select id,avg(score) as a from student group by id having a > (select avg(score)
 ``` sql
 -- 考生作答
 
+-- 窗口
+方法一
+select * from (select *,round((avg(nvl(score,0)) over (partition by month)),2) as avgscore from student) where score > avgscore;
+ id | score | month | avgscore
+----+-------+-------+----------
+  6 |    53 |     1 |    40.67
+  2 |    68 |     1 |    40.67
+  4 |    67 |     1 |    40.67
+  1 |    56 |     1 |    40.67
+  1 |    56 |     2 |    48.33
+  2 |    68 |     2 |    48.33
+  4 |    67 |     2 |    48.33
+  5 |    99 |     2 |    48.33
+   
+-- 方法二
+
+select t1.*,avgscore from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month where score>avgscore;
+
+id | score | month | avgscore
+----+-------+-------+----------
+  1 |    56 |     1 |    40.67
+  2 |    68 |     1 |    40.67
+  4 |    67 |     1 |    40.67
+  6 |    53 |     1 |    40.67
+  1 |    56 |     2 |    48.33
+  2 |    68 |     2 |    48.33
+  4 |    67 |     2 |    48.33
+  5 |    99 |     2 |    48.33
+
 ```
 
 ##### (3) 查询每次平均成绩差值
 
 ```sql
 -- 考生作答
+select t1.*,avgscore,t1.score-avgscore as diff from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month;
+
+select t1.id,nvl(t1.score,0),t1.month,avgscore,nvl(t1.score,0)-avgscore as diff from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month;
+ id | nvl | month | avgscore |  diff
+----+-----+-------+----------+--------
+  1 |  56 |     1 |    40.67 |  15.33
+  2 |  68 |     1 |    40.67 |  27.33
+  4 |  67 |     1 |    40.67 |  26.33
+  6 |  53 |     1 |    40.67 |  12.33
+  1 |  56 |     2 |    48.33 |   7.67
+  2 |  68 |     2 |    48.33 |  19.67
+  4 |  67 |     2 |    48.33 |  18.67
+  5 |  99 |     2 |    48.33 |  50.67
+  3 |   0 |     1 |    40.67 | -40.67
+  5 |   0 |     1 |    40.67 | -40.67
+  3 |   0 |     2 |    48.33 | -48.33
+  6 |   0 |     2 |    48.33 | -48.33
+
+ select t1.id,nvl(t1.score,0),t1.month,avgscore,nvl(t1.score,0)-avgscore as diff from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month order by id;
+ id | nvl | month | avgscore |  diff
+----+-----+-------+----------+--------
+  1 |  56 |     1 |    40.67 |  15.33
+  1 |  56 |     2 |    48.33 |   7.67
+  2 |  68 |     1 |    40.67 |  27.33
+  2 |  68 |     2 |    48.33 |  19.67
+  3 |   0 |     1 |    40.67 | -40.67
+  3 |   0 |     2 |    48.33 | -48.33
+  4 |  67 |     2 |    48.33 |  18.67
+  4 |  67 |     1 |    40.67 |  26.33
+  5 |  99 |     2 |    48.33 |  50.67
+  5 |   0 |     1 |    40.67 | -40.67
+  6 |  53 |     1 |    40.67 |  12.33
+  6 |   0 |     2 |    48.33 | -48.33
+
 
 ```
 
@@ -681,7 +749,26 @@ where not exists
 
 ##### (1) 什么是数据库事务，介绍GaussDB数据库事务管理的实现
 
++ 事务是单个逻辑单元执行的一系列操作，这些操作作为一个整体一起向系统提交要么执行，要么不执行。事务是一个不可分割的工作逻辑单元，GaussDB支持事务的ACID特性(**原子性**(atomicity)，**一致性(consistancy)**,**隔离性(isolation)**,**持久性(duration)**)。
++ **GaussDB**基于**MVCC**(多版本并发控制)并结合两阶段锁的方式进行事务管理，其特点是**读写之间不阻塞**。**SELECT**是纯读操作，**UPDATE**和**DELETE**读写操作。在准备阶段就会把提交操作所需要的信息和资源全部写入磁盘，进行持久化，提交阶段根据之前准备好的提交信息和资源，故障或者执行失败发生在准备阶段和提交阶段之间时，事务的最终状态为回滚。
++ **GaussDB**基于**GTM**组件协助管理分布式事务，采用多版本并发控制**MVCC**机制。**GaussDB**提供了不同的**GTM**模式，**GTM-Lite**和**GTM-Free**。在**GTM-Lite**模式下，中心事务处理节点的压力得到减轻，事务处理流程进一步优化，**GTM**的性能和并发瓶颈得到缓解，可实现强一致性；在**GTM-Free**模式下，中心事务管理节点不再参与事务管理，消除了**GTM**单点瓶颈，可以达到更高的事务处理性能，但不支持强一致性，仅支持最终一致性。
+
 ##### (2) GaussDB数据库有哪些事务隔离级别，并说明含义
 
++ **READ COMMITED**: 读已提交隔离级别，事务只能讲到已提交的数据而不会读未提交的数据，这是默认值 。在读已提交模式里，每个新的命令都是从一个新的快照开始的，而这个快照包含所有到该时刻为止已经提交的事务，因此同一事务中后面的命令将看到任何已经提交的其它事务的结果(效果)。这里关心的问题是在单个命令里是否看到数据库里完全一致的视图。
++ **REPEATABLE READ**: 事务可以重复读隔离级别，事务只能讲到事务开始之前已经提交的数据，不能读取到未提交的数据 以及事务执行期间其它并发事务提交的修改(**但是，查询能够查到自身所在事物中先前更新的执行结果，即使先前更新尚未提交**)。可重复读事务中的查询看到的是事务开始时的快照，不是该事务内部当前查询开始时的快照，就是说，单个事务内部的**SELECT**命令总是查看到同样的数据，查看不到自身事务开始之后其他并发事务修改后提交的数据。
+
 ##### (3) 输出命令，启动事务，事务隔离级别为读已提交，只读模式
+
++ 启动事务:  **start transaction**
+
++ 设置隔离级别为只读模式
+
+  **set local transaction isolation level read committed read only**
+
++ 结束事务
+
+  **commit;**
+
+  
 
