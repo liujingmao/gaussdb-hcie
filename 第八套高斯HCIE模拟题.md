@@ -154,7 +154,38 @@ select id,sum(math+art+phy+music) as g from stu group by id order by g desc;
 
 ```sql
 -- 考生作答
-select id,(math+art+phy+music+5) from stu where id in (select id from (select id,(art+music) as am from stu order by am desc limit 5));
+select 
+	id,
+	(math+art+phy+music+5) as sum_score
+from 
+	stu 
+where 
+	id 
+in 
+	(select 
+     	id 
+     from 
+     	(select 
+         	id,
+         	(art+music) as am 
+         from 
+         	stu 
+         order by 
+         	am 
+         desc limit 5));
+         
+ select id,(art+music) as am from stu order by am desc limit 5 join (select id,(math+art+phy+music+5) from stu) t on stu.id = t.id;
+ 
+ 
+select t2.id,(math+art+phy+music+5) as total_score from stu t1 join (select id,(art+music) as am from stu order by am desc limit 5) t2 on t1.id = t2.id;
+ id | total_score
+----+-------------
+  1 |         250
+  2 |         280
+  4 |         299
+  5 |         307
+  7 |         282
+
 ```
 
 #### 4. SQL应用4
