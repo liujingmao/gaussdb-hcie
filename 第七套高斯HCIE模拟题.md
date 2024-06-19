@@ -27,6 +27,11 @@
 create table student(id int,score int,month int);
 -- 导入数据 
 insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53,1),(1,56,2),(2,68,2),(3,NULL,2),(4,67,2),(5,99,2),(6,NULL,2);
+
+-- 补充3和4月份的数据
+insert into student values(1,56,3),(2,78,3),(3,88,3),(4,67,3),(5,88,3),(6,99,3);
+insert into student values(1,78,4),(2,88,4),(3,98,4),(4,78,4),(5,89,4),(6,86,4);
+
 ```
 
 ##### (1) 查询月考平均成绩比编号5的大的学生信息
@@ -34,17 +39,43 @@ insert into student values(1,56,1),(2,68,1),(3,NULL,1),(4,67,1),(5,NULL,1),(6,53
 ```sql
 -- 考生作答
 -- 因为null值不计算，产生将null修改为0
-
-hcie7=# select id,round(avg(nvl(score,0)),2) as a from student group by id having a > (select round(avg(nvl(score,0)),2) as a from student where id = 5);
+hcie7=# 
+select 
+	id,
+	round(avg(nvl(score,0)),2) as a 
+from 
+	student 
+group by 
+	id 
+having a > (select 
+            	round(avg(nvl(score,0)),2) as a 
+            from 
+            	student 
+            where 
+            	id = 5);
  id |   a
 ----+-------
   1 | 56.00
   4 | 67.00
   2 | 68.00
 (3 rows) 
+  
   -- ans
   
-select id,round((avg(nvl(score,0))),2) as avgscore from student group by id having avgscore > (select round((avg(nvl(score,0))),2) from student where id = 5);
+select
+	id,
+	round((avg(nvl(score,0))),2) as avgscore 
+from 
+	student 
+group by 
+	id 
+having 
+	avgscore > (select 
+                	round((avg(nvl(score,0))),2)
+                from 
+                	student 
+                where 
+                	id = 5);
  id | avgscore
 ----+----------
   1 |    56.00
@@ -57,10 +88,16 @@ select id,round((avg(nvl(score,0))),2) as avgscore from student group by id havi
 
 ``` sql
 -- 考生作答
-
 -- 窗口
 方法一
-select * from (select *,round((avg(nvl(score,0)) over (partition by month)),2) as avgscore from student) where score > avgscore;
+select	
+	* 
+from 
+	(select 
+     	*,
+     	round((avg(nvl(score,0)) over (partition by month)),2) as avgscore 
+     from student) 
+ where score > avgscore;
  id | score | month | avgscore
 ----+-------+-------+----------
   6 |    53 |     1 |    40.67
@@ -74,7 +111,23 @@ select * from (select *,round((avg(nvl(score,0)) over (partition by month)),2) a
    
 -- 方法二
 
-select t1.*,avgscore from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month where score>avgscore;
+select 
+	t1.*,
+	avgscore 
+from 
+	student as t1 
+join 
+	(select 
+     	month,
+     	round(avg(nvl(score,0)),2) as avgscore 
+     from 
+     	student 
+     group by 
+     	month) t2 
+on 
+	t1.month=t2.month 
+where 
+	t1.score>t2.avgscore;
 
 id | score | month | avgscore
 ----+-------+-------+----------
@@ -92,10 +145,16 @@ id | score | month | avgscore
 ##### (3) 查询每次平均成绩差值
 
 ```sql
-select month,round(avg(nvl(score,0)),2) as avgscore,avgscore-lag(avgscore) over (order by month) as diff from student group by month order by month;
-
+-- 正确解法
+select 
+	month,
+	round(avg(nvl(score,0)),2) as avgscore,
+	avgscore-lag(avgscore) over (order by month) as diff 
+from 
+	student group by month order by month;
+		
 -- 考生作答
-
+-- 一开始理解有误的解法
 select t1.id,nvl(t1.score,0),t1.month,avgscore,nvl(t1.score,0)-avgscore as diff from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month;
  id | nvl | month | avgscore |  diff
 ----+-----+-------+----------+--------
@@ -165,9 +224,6 @@ partition by range(c2)
 (
 	partition partitionname1 values less than (),
 
-
-
-
 );-- 去主机到了，要记得练习
 
 -- create tabel 
@@ -236,7 +292,7 @@ and
 -- 关联条件两个  pg_class.oid = pgxc_class.pcrelid 
 			   pg_class.relnamespace = pg_namespace.oid
 			   
--- 两个过滤条件  
+-- 两个过滤条件  relname = 'lineitem' nspname = 'public' (具体看考试的时候是哪个表和schemas)
 ```
 
 ##### (4) 查看表所在实例的信息
@@ -247,19 +303,31 @@ select
 	t4.* 
 from 
 	pg_class t1,
-	pgxc_class t2,
-	pg_namespace t3,
+	pg_namespace t2,
+	pgxc_class t3,
 	pgxc_node t4
 where
-	t1.oid = t2.pcrelid
+	t1.oid = t3.pcrelid
 and
-	t1.relnamespace = t3.oid 
+	t1.relnamespace = t2.oid 
 and 
-	cast(t2.nodeoids as varchar(20)) = cast(t4.oid as varchar(20)) 
+	cast(t3.nodeoids as varchar(20)) = cast(t4.oid as varchar(20)) 
 and
 	t1.relname = 'lineitem'
 and 
-	t3.nspname = 'public';
+	t2.nspname = 'public';
+
+-- 涉及四个系统表
+pg_class t1
+pg_namespace t2
+pgxc_class t3
+pgxc_node t4
+-- 三个关联条件
+t1.oid = t3.pcrelid
+t1.relnamespace = t2.oid
+cast(t3.nodeoids as varchar(20)) = cast(t4.oid as varchar(20))
+-- 两个过滤条件
+-- 两个过滤条件  t1.relname = 'lineitem' t2.nspname = 'public' (具体看考试的时候是哪个表和schemas)
 ```
 
 #### 3. 数据库连接
