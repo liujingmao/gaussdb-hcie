@@ -92,8 +92,9 @@ id | score | month | avgscore
 ##### (3) 查询每次平均成绩差值
 
 ```sql
+select month,round(avg(nvl(score,0)),2) as avgscore,avgscore-lag(avgscore) over (order by month) as diff from student group by month order by month;
+
 -- 考生作答
-select t1.*,avgscore,t1.score-avgscore as diff from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month;
 
 select t1.id,nvl(t1.score,0),t1.month,avgscore,nvl(t1.score,0)-avgscore as diff from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month;
  id | nvl | month | avgscore |  diff
@@ -126,7 +127,6 @@ select t1.id,nvl(t1.score,0),t1.month,avgscore,nvl(t1.score,0)-avgscore as diff 
   5 |   0 |     1 |    40.67 | -40.67
   6 |  53 |     1 |    40.67 |  12.33
   6 |   0 |     2 |    48.33 | -48.33
-
 
 ```
 
