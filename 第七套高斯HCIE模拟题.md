@@ -100,48 +100,81 @@ select id,avg(score) as a from student group by id having a > (select avg(score)
 
 ```  sql
 -- 考生作答--
+hcie7=# create user user2 createdb password 'Huawei@123';
+CREATE ROLE
 ```
 
 ##### (2) 查询用户的连接数上限
 
 ```sql
 -- 考生作答
+hcie7=# select rolname,rolconnlimit from pg_roles where rolname = 'user2';
+ rolname | rolconnlimit
+---------+--------------
+ user2   |           -1
 ```
 
 ##### (3) 设置user2用户连接数为100
 
 ```sql
 -- 考生作答
+hcie7=# alter user user2 connection limit 100;
+ALTER ROLE
+hcie7=#
 ```
 
 ##### (4) 查询postgres 数据库连接上限；显示库，上限数量
 
 ```sql
 -- 考生作答
+hcie7=# select datname,datconnlimit from pg_database where datname = 'postgres';
+ datname  | datconnlimit
+----------+--------------
+ postgres |           -1
 ```
 
 ##### (5) 查询postgres数据库中用户已经使用的会话数量
 
 ```sql
 -- 考生作答，这个会话数量，之前没有遇到过
+hcie7=# select count(datname) from pg_stat_activity where datname = 'postgres';
+ count
+-------
+     7
 ```
 
 ##### (6) 查询所有用户已经使用的会话连接数
 
 ```sql
--- 考生作答，这个会话数量，之前没有遇到过
+-- 考生作答，这个会话数量，之前没有遇到过,
 ```
 
 ##### (7) 查询库最大连接数???
 
 ```sql
 -- 考生作答，这个会话数量，之前没有遇到过
+hcie7=# show max_connections;
+ max_connections
+-----------------
+ 1000
+(1 row)
 ```
 
 ##### (8) 查询会话状态，显示datid,pid,state??
 
 ```sql
 -- 考生作答，这个会话数量，之前没有遇到过
+hcie7=# select datid,pid,state from pg_stat_activity;
+ datid |       pid       | state
+-------+-----------------+--------
+ 57414 | 140289995831040 | active
+ 15707 | 140290849437440 | active
+ 15707 | 140290822240000 | idle
+ 15707 | 140290897737472 | idle
+ 15707 | 140290872571648 | active
+ 15707 | 140290926487296 | idle
+ 15707 | 140290962732800 | idle
+ 15707 | 140291013076736 | active
 ```
 
 #### 4. 行级别访问控制 
@@ -150,48 +183,79 @@ select id,avg(score) as a from student group by id having a > (select avg(score)
 
 ```sql
 -- 考生作答
+hcie7=# create user user3 password 'test@123';
+CREATE ROLE
 ```
 
 ##### (2) 当前有一张表t_test(id,name); 有2万以上的数据，请授权只允许user3能够访问id=3的数据
 
 ```sql
 -- 考生作答
+-- 根据题目意思，先给user3select权限，再打开行级策略
+grant select on t_test to user3;
+alter table t_test enable row level security;
+create row level security policy lsp_for_user3 on t_test to user3 using(id=3);
+-- 设置完成行级访问策略，记得验证，验证时会发现权限不够，报错
 ```
 
 ##### (3) 修改赋权能看id=1或者2的数据
 
 ```sql
 -- 考生作答
+alter row level security policy lsp_for_user3 on t_test using(id = 1 or id = 2);
 ```
 
 ##### (4) 当前有一张用户表t_user(id,age),请创建两名用户u1和u2,密码均为'test@123'
 
 ```sql
 -- 考生作答
+create user u1 password 'test@123';
+create user u2 password 'test@123';
 ```
 
 ##### (5) 设置行级别访问控制，u1,u2设置只能查看自己的用户信息
 
 ```sql
 -- 考生作答
+-- 1. 赋权
+grant select on t_user to u1;
+grant select on t_user to u2;
+-- 2. 打开行级访问策略控制
+alter table t_user enable row level security;
+
+create row level security policy lsp_for_u1 on t_user to u1 using(id=current_user);
+
+create row level security policy lsp_for_u2 on t_user to u2 using(id=current_user);
+
 ```
 
 ##### (6) 加一个级别访问控制让u1只能看自己且年龄30以下的数据
 
 ```sql
 -- 考生作答
+
+create row level security policy lsp_for_u11 on t_user to u1 using(id=current_user and age < 30);
 ```
 
 ##### (7) 删除上述配置的所有行级访问控制策略
 
 ```sql
 -- 考生作答
+drop row level security policy lsp_for_u11 on t_user;
+drop row level security policy lsp_for_u1 on t_user;
+drop row level security policy lsp_for_u2 on t_user;
 ```
 
 ##### (8) 关闭表的行控制开关，并且级联删除用户
 
 ```sql
 -- 考生作答
+alter table t_user disable row level security;
+alter table t_test disable row level security;
+
+drop user u1 cascade;
+drop user u2 cascade;
+drop user user3 cascade;
 ```
 
 #### 5. 存储过程
