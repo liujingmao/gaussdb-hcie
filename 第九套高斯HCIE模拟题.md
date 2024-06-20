@@ -80,6 +80,35 @@ create rolw sjh112 password 'Huawei@123';
 
 #### 4. 存储过程
 
+**成绩表**
+
+| 编号 | 成绩 | 课程 |
+| ---- | ---- | ---- |
+| 001  | 86   | c1   |
+| 002  | 95   | c2   |
+
+**课程表**
+
+| 课程编号 | 课程名称 |
+| -------- | -------- |
+| c1       | chinese  |
+| c2       | math     |
+
+```sql
+-- create table & 导入数据
+create table course(cid varchar(20),cname varchar(50));
+create table score(id varchar(20),score int, cid varchar(20));
+
+insert into course values('c1','chinese'),('c2','math');
+insert into score values('001',86,'c1'),('002',95,'c2');
+```
+
+##### (1) 编写存储过程，输入课程c1获取平均成绩、数据编号和课程名称，根据平均成绩获取成绩绩点：0-59给0分，60-69给0.1,70-79给0.2,80-89给0.3,90-100给0.4
+
+```sql
+-- 作答区
+```
+
 #### 5. 数据库优化
 
 根据教师表teacher(老师编号，教师名),课程表course(课程名，任课老师编号、课程编号)，班级表class(班级名称、班级编号、学年)，分数表score(课程编号、分数、学生学号、班级编号)
