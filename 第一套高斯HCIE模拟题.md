@@ -46,7 +46,15 @@ and
 
 ```sql
 -- 考生作答
-select * from (select *, dense_rank() over(partition by cno order by score desc) as rk from student) where rk <=3;
+select 
+	* 
+from 
+	(select 
+     	*, 
+     	dense_rank() over (partition by cno order by score desc) as rk 
+     from 
+     	student) 
+ where rk <=3;
 
 -- 方法2 
 (select * from student where cno = 1 order by score desc limit 3) union all (select * from student where cno = 2 order by score desc limit 3);
@@ -80,10 +88,10 @@ select
 	n.nspname 
 from 
 	pg_class c 
-		join
+join
 	pg_namespace n
-		on
-	c.relnamespace = n.oid(无法理解？？？？？)
+on
+	c.relnamespace = n.oid
 where
 	c.relname = 'p_table';
 
@@ -95,13 +103,14 @@ from
 	pg_tables 
 where 
 	tablename = 'p_table';
- tablename | schemaname
+	
+tablename | schemaname
 -----------+------------
  p_table   | public
 (1 row)
 ```
 
-##### (3) 查询表的所在节点nodeoids信息
+##### (3) 查询表的所在节点nodeoids信息(云主机到位后，再练习哦)
 
 ```sql
 -- 考生作答
@@ -139,7 +148,25 @@ where
 and
 	t1.relnamespace = t3.oid 
 and 
-	cast(t2.nodeoids as varchar(20)) = cast(t4.oid as varchar(20)) 
+	cast(t2.nodeoids as varchar(20)) = cast(t4.oid as varchar(20)) -- 两种表达方法
+and
+	t1.relname = 'p_table'
+and 
+	t3.nspname = 'public';
+	
+select 
+	t4.* 
+from 
+	pg_class t1,
+	pgxc_class t2,
+	pg_namespace t3,
+	pgxc_node t4
+where
+	t1.oid = t2.pcrelid
+and
+	t1.relnamespace = t3.oid 
+and 
+	cast(t2.nodeoids::varchar(20)) = cast(t4.oid::varchar(20)) -- 两种表达方法
 and
 	t1.relname = 'p_table'
 and 
@@ -567,7 +594,7 @@ create index index_name2 on tb_user(stu_no,age);
 
 ##### (3) 在上题的基础上，用3种不同的方式使如下SQL不走索引 
 
-```
+```sql
 explain analyze select * from tb_user where stu_no = 100 and age =29;
 ```
 
@@ -577,7 +604,7 @@ explain analyze select * from tb_user where stu_no = 100 and age =29;
 SQL1: 
 explain anylyze 
 select
-	/* + tablescan */* 
+	/* + tablescan(tb_user) */* 
 from
 	tb_user 
 where 
