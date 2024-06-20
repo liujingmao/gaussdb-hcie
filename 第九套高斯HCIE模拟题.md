@@ -67,7 +67,8 @@ select conname from pg_constraint t1,pg_class t2 where t1.conrelid = t2.oid and 
 alter table test drop constraint test_pkey;
 
 -- 结果 
-hcie9=# select conname from pg_constraint t1,pg_class t2 where t1.conrelid = t2.oid and t2.relname = 'test';
+hcie9=# 
+select conname from pg_constraint t1,pg_class t2 where t1.conrelid = t2.oid and t2.relname = 'test';
  conname
 ---------
 (0 rows)
@@ -127,22 +128,31 @@ show audit_enabled;
 ##### (3) 查看用户hcie_audit成功登录postgres的记录
 
 ```sql
-select * from pg_query_audit(now()- interval '1 hour',now()) where username = '' and database = 'postgres' and type = 'login_success' and result = 'ok';
+select
+	* 
+from 
+	pg_query_audit(now()- interval '1 hour',now()) 
+where 
+	username = 'hcie_audit' 
+and 
+	database = 'postgres'
+and 
+	type = 'login_success' 
+and 
+	result = 'ok';
 ```
 
 ##### (4) 统计一天内的审计数量要求用now()
 
 ```sql
-select count(*) from pg_query(now()-1,now());
+select count(*) from pg_query_audit(now()-1,now());
 ```
 
 ##### (5) 删除指定时间的审计记录(如删除过去10min内的)
 
 ```sql
-select pg_delete_audit(now() - interval '10 min',now());
+select pg_delete_audit(now() - interval '10 min',now()); -- select 直接加该函数
 ```
-
-
 
 #### 3. 用户权限管理
 
@@ -165,6 +175,8 @@ create user sjh111 password 'Huawei@123';
 ##### (2) 将表sjh_test的读取和删除权限授予给sjh111用户
 
 ```sql
++ -- 普通用户只有public模式的权限，需要将当前schema使用权限授予给用户
+grant usage on schema root to sjh111;
 -- 作答区
 grant select,delete on sjh_test to sjh111;
 ```
@@ -183,10 +195,21 @@ grant select(a,b),insert(a,b),update(a,b) on sjh_test to sjh111;
 revoke select(a),insert(a),update(a) on sjh_test from sjh111;
 ```
 
-##### (5) 查看用户sjh111和数据库的相关权限，要求显示数据库名、用户名、数据库的权限
+##### (5) 查看用户sjh111和数据库的相关权限，要求显示数据库名、用户名、数据库的权限(知识盲区)
 
 ```sql
 -- 作答区
+select 
+	t1.*,
+	rolname 
+from 
+	(select datname,(aclexplode(datacl)).grantee,(aclexplode(datacl)).privilege_type from pg_database) t1,
+	pg_roles 
+where 
+	grantee = pg_roles.oid 
+and 
+	rolname = 'sjh111' 
+and datname not like 'tempplate%';
 
 ```
 
@@ -202,16 +225,33 @@ select schemaname,tablename,tableowner from pg_tables where tablename = 'sjh_tes
 (1 row)
 ```
 
-##### (7) 查看sjh111的表权限，要求显示表名、schema名、用户名、相关表权限
+##### (7) 查看sjh111的表权限，要求显示表名、schema名、用户名、相关表权限(知识盲区)
 
 ```sql
 -- 作答区-- information_schema.table_privileges
+hcie9=# select table_name,table_schema,grantee,privilege_type from information_schema.table_privileges where grantee = 'sjh111';
+ table_name | table_schema | grantee | privilege_type
+------------+--------------+---------+----------------
+ sjh_test   | public       | sjh111  | SELECT
+ sjh_test   | public       | sjh111  | DELETE
 ```
 
-##### (8) 查询对表sjh_test有操作权限的用户，要求显示：用户名、操作权限 
+##### (8) 查询对表sjh_test有操作权限的用户，要求显示：用户名、操作权限(知识盲区)
 
 ```sql
 -- 作答区 -- information_schema.table_privileges
+ select grantee,privilege_type from information_schema.table_privileges where table_name = 'sjh_test';
+ grantee | privilege_type
+---------+----------------
+ omm     | INSERT
+ omm     | SELECT
+ omm     | UPDATE
+ omm     | DELETE
+ omm     | TRUNCATE
+ omm     | REFERENCES
+ omm     | TRIGGER
+ sjh111  | SELECT
+ sjh111  | DELETE
 ```
 
 ##### (9) 创建user3用户，密码'test@123'
@@ -258,11 +298,12 @@ alter row level security policy rls on t_test to user3 using(id = 1 or id =2)
 create table course(cid varchar(20),cname varchar(50));
 create table score(id varchar(20),score int, cid varchar(20));
 
+-- insert datas
+
 insert into course values('c1','chinese'),('c2','math');
 insert into score values('001',86,'c1'),('002',95,'c2');
 
 insert into score values('003',88,'c1'),('003',90,'c2');
-
 
 ```
 
@@ -325,6 +366,7 @@ create table score(
     courseno int
 );
 
+-- insert data
 
 insert into teacher values(1,'a');
 
