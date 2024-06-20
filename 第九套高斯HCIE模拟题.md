@@ -260,6 +260,10 @@ create table score(id varchar(20),score int, cid varchar(20));
 
 insert into course values('c1','chinese'),('c2','math');
 insert into score values('001',86,'c1'),('002',95,'c2');
+
+insert into score values('003',88,'c1'),('003',90,'c2');
+
+
 ```
 
 ##### (1) 编写存储过程，输入课程c1获取平均成绩、数据编号和课程名称，根据平均成绩获取成绩绩点：0-59给0分，60-69给0.1,70-79给0.2,80-89给0.3,90-100给0.4
@@ -281,7 +285,7 @@ create or replace procedure get_avgscore_scoreid_cname(
     coursename out varchar(50),
     grade out float) as 
 begin 
-	select avg(score) into avgescore from score where cid = courseid;
+	select round(avg(score),2) into avgescore from score where cid = courseid;
 	select id into sid from score where cid = courseid;
 	select cname into coursename from course where cid = courseid;
 	case when avgescore<60 then grade = 0; 
@@ -292,11 +296,6 @@ begin
 	end case;
 end;
 /
-
-
-
-
-
 ```
 
 #### 5. 数据库优化
@@ -307,17 +306,101 @@ end;
 
 ```sql
 -- create table 
-create table teacher(tno int,tname varchar(50));
-create table course(courseno int,courname varchar(50),tno int);
-create table class(cno varchar(50),cname varchar(50),xuenian varchar(50));
-create table score(cno int,score int,stuno int,courseno int);
+create table teacher(
+    tno int,
+    tname varchar(50)
+);
+create table course(
+    courseno int,
+    courname varchar(50),
+    tno int);
+create table class(
+    cno varchar(50),
+    cname varchar(50),
+    xuenian varchar(50));
+create table score(
+    cno int,
+    score int,
+    stuno int,
+    courseno int
+);
+
+
+insert into teacher values(1,'a');
+
+insert into course values(1,'语文',1);
+
+insert into class values('100','class1','2020');
+
+insert into score values(100,88,20,1);
+
+
 ```
 
 ##### (1) 查询2020学年，语文平均成绩大于80的班级，打印班级名称及平均成绩，要求where条件里有两个非相关子查询 
 
+```sql
+select 
+	t1.cname,
+	round(avg(nvl(t2.score,0)),2) as avgscore 
+from 
+	class t1 
+join 
+	score t2 
+on 
+	t1.cno = t2.cno 
+where 
+	t1.cno 
+in 
+	(select cno from class where xuenian = '2020') 
+and 
+	t2.courseno = (select courseno from course where courname = '语文')
+group by 
+	t1.cname having avgscore > 80;
+```
+
 ##### (2) 优化上一步的语句，将where条件中的非相关的子查询改为from后边的范围表
 
+```sql
+select 
+	t1.cname,round(avg(nvl(t2.score,0)),2) as avgscore 
+from 
+	score t2 
+join 
+	(select * from class where xuenian = '2020') t1 
+on
+	t1.cno = t2.cno 
+join 
+	(select * from course where courname = '语文') t3 
+on 
+	t3.courseno =  t2.courseno 
+group by 
+	t1.cname having avgscore > 80;
+```
+
 ##### (3) 优化上一步的语句，将from后面的子查询优化为父表的关联查询 
+
+```sql
+select 
+	t1.cname,
+	round(avg(nvl(t2.score,0)),2) as avgscore 
+from 
+	class t1,
+	score t2,
+	course t3 
+where 
+	t1.cno = t2.cno 
+and 
+	t3.courseno =  t2.courseno
+and 
+	t1.xuenian = '2020' 
+and 
+	t3.courname = '语文' 
+group by 
+	t1.cname having avgscore > 80;
+```
+
+
 
 
 
