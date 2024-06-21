@@ -70,6 +70,19 @@ select t1.cname,t2.month,max(t2.score) from class t1,student t2 where t1.cno = t
 
 ```sql
 -- 考生作答
+
+-- 以month 分组,求出class2班的最低分
+select month,min(score) from student where cno = (select sno from class where cname = 'class2') group by month;
+
+select t1.sno,t1.sname,t1.score from (select * from  student where cno = (select cno from class where cname='class1')) t1 join (select month,min(score) as ms from student where cno = (select sno from class where cname = 'class2') group by month) t2 on t1.month = t2.month and nvl(t1.score,0) < t2.ms; 
+
+sno | sname | score
+-----+-------+-------
+   2 | Jerry |   510
+   5 | Lee   |   410
+   5 | Lee   |   210
+   5 | Lee   |
+
 ```
 
 ##### (2) 打印月考总分平均最高的学生信息，输出 学号，姓名和月考总分平均分
@@ -425,40 +438,113 @@ where
 
 ##### 当前有三个表，分别是学生信息表student(sid,sname,sno)和202201班级成绩表score1(sid,course,score),202202班级成绩表score2(同score1)
 
-#####  (1) 查202201班级和202202班级所有人语言成绩前10的记录，第一个查询要用union
+```sql
+-- create table 
+create table student2(
+	sid int,
+    sname varchar(20),
+    sno int
+);
+
+insert into student2 values(1,'a',10);
+insert into student2 values(2,'b',20);
+insert into student2 values(3,'c',30);
+insert into student2 values(4,'d',30);
+
+create table score1(
+	sid int,
+    course varchar(20),
+    score int
+);
+
+insert into score1 values(1,'yuwen',20);
+insert into score1 values(2,'yuwen',30);
+insert into score1 values(3,'yuwen',40);
+insert into score1 values(4,'yuwen',50);
+
+insert into score1 values(1,'math',40);
+insert into score1 values(2,'math',60);
+insert into score1 values(3,'math',80);
+insert into score1 values(4,'math',100);
+
+
+
+create table score2(
+	sid int,
+    course varchar(20),
+    score int
+);
+
+insert into score2 values(5,'yuwen',60);
+insert into score2 values(6,'yuwen',70);
+insert into score2 values(7,'yuwen',80);
+insert into score2 values(8,'yuwen',90);
+```
+
+
+
+#####  (1) 查202201班级和202202班级所有人语文化成绩前2的记录，第一个查询要用union
 
 ```sql
 -- 考生作答
+select * from 
+(select sid,course,score from score1 where course = 'yuwen' order by score desc limit 2) union
+(select sid,course,score from score2 where course = 'yuwen' order by score desc limit 2);
+
+-- ans
+select sid,course,score,rk from (select *,rank() over (order by score desc) as rk from ((select sid,course,score from score1 where course = 'yuwen') union (select sid,course,score from score2 where course = 'yuwen'))) where rk <=2;
+
+select sid,course,score,rk from (select *,rank() over (order by score desc) as rk from ((select sid,course,score from score1) union (select sid,course,score from score2))) where rk <=2 and course='yuwen';
+
+select sid,course,score from ((select * from score1) union (select * from score2)) where course = 'yuwen' order by score desc limit 2;
+ sid | course | score
+-----+--------+-------
+   8 | yuwen  |    90
+   7 | yuwen  |    80
+
 ```
 
 ##### (2) 对以下SQL语句进行优化
 
 ```sql
 -- 考生作答
+hcie8=# select sid,course,score from ((select * from score1) union all(select * from score2)) where course = 'yuwen' order by score desc limit 2;                            sid | course | score
+-----+--------+-------
+   8 | yuwen  |    90
+   7 | yuwen  |    80
+     
+ -- ans
+ 
+select sid,course,score,rk from (select *,rank() over (order by score desc) as rk from ((select sid,course,score from score1) union all (select sid,course,score from score2))) where rk <=2 and course='yuwen';
+
 ```
 
 ##### (3) 查看两个班级相同的科目，202201班级在202202中不存在的成绩，要求使用not in
 
 ```sql
 -- 考生作答
+
+select * from score1 t1 wehre score not in (select score from score2 t2 where t1.course = t2.course);
 ```
 
 ##### (4) 对以上SQL语句进行优化
 
 ```sql
 -- 考生作答
+select * from score1 t1 wehre not exists (select score from score2 t2 where t1.course = t2.course and t1.score = t2.score);
 ```
 
 ##### (5) 查询班级202201语文成绩最高的学生，要求先创建索引，并且能保证一定会使用索引 
 
 ```sql
 -- 考生作答
+select * from score1
 ```
 
 ##### (6) 查询202201班级的学生的成绩比202202班级的学生最高成绩还要大的学生信息，对以下给出的SQL进行改写
 
 ```sql
-SQL: 
+-- 原:SQL: 
 select 
 	stu.sid,
 	stu.sname,
@@ -482,6 +568,7 @@ having sumscore > (select
 
 ```sql
 -- 考生作答
+
 ```
 
 #### 7.  性能优化3
@@ -547,7 +634,23 @@ insert into stuv3 values('1001',56,85,72,1),('1002',66,75,82,1),('1003',87,76,88
 
 ```sql
 -- 考生作答
-select t1.sno,(t1.math-t2.m) as diff_math_avgm,(t1.art-t2.a) as diff_art_avga,(t1.physical-t2.p) as diff_phy_avgp from stuv3 t1,(select avg(math) as m,avg(art) as a,avg(physical) as p from stuv3) t2;
+select 
+	t1.sno,
+	(t1.math-t2.m) as diff_math_avgm,
+	(t1.art-t2.a) as diff_art_avga,
+	(t1.physical-t2.p) as diff_phy_avgp 
+from 
+	stuv3 t1,
+	(select avg(math) as m,avg(art) as a,avg(physical) as p from stuv3) t2;
+	
+select 
+	t1.sno,
+	t1.math, round(t2.m,2),round((t1.math-t2.m),2) as diff_math_avgm,
+	t1.art,round(t2.a,2),round((t1.art-t2.a),2) as diff_art_avga,
+	t1.physical,round(t2.p,2),round((t1.physical-t2.p),2) as diff_phy_avgp 
+from 
+	stuv3 t1,
+	(select avg(math) as m,avg(art) as a,avg(physical) as p from stuv3) t2;
 ```
 
 ##### (2) 编写存储过程，输入学生id和科目名称输出对应的绩点值，0-59 给0，60-69给0.1,70-79给0.2, 80-89给0.3,90-100给0.4
@@ -581,9 +684,11 @@ begin
 end;
 /
 -- create table stuv3(sno varchar(30),math float,art float,physical float,cno int);
+
+call get_total_score_by_no_cno('1001',1,null);
 ```
 
-#### 9. 触发器1(暂时没有做出来)
+#### 9. 触发器1
 
 ##### 本题根据以下表完成相应触发器创建使用
 
@@ -597,7 +702,13 @@ create table logger(sname text,dept_name text,log_date date);
 
 insert into tab1 values('a',1,1000.00,'teacher'),('b',2,2000,'professor');
 insert into dept values(1,'M'),(2,'C');
-insert into logger('a','M',202304),('b','C',202202)
+insert into logger('a','M',202304),('b','C',202202);
+
+insert into tab1 values('c',2,2000.00,'teacher');
+
+insert into tab1 values('D',1,2000.00,'teacher');
+
+select * from logger;
 ```
 
 ##### 创建触发器，要求在tab1表插入一行数据时，自动往logger表中插入一条记录，记录sname和部门名称，并用当天的日期来标记该行数的生成时间
@@ -605,15 +716,15 @@ insert into logger('a','M',202304),('b','C',202202)
 ##### (1) 创建触发器函数T_INS_TR
 
 ```sql
+-- create table logger(sname text,dept_name text,log_date date)
 -- 考生作答
 CREATE OR REPLACE FUNCTION T_INS_TR() RETURNS TRIGGER AS 
 $$  
 BEGIN  
-    INSERT INTO logger(sname, dept_name, log_date) SELECT (NEW.sname,d.dept_name,sysdate) FROM dept d WHERE d.id = NEW.deptno;  
+    insert into logger values(new.sname,(select dept_name from dept where id = new.deptno),now());
     RETURN NEW;  
 END;  
-$$
- LANGUAGE plpgsql;  
+$$LANGUAGE plpgsql;  
 ```
 
 ##### (2) 创建触发器T_INS_TR
@@ -628,7 +739,7 @@ CREATE TRIGGER T_INS_TR AFTER INSERT ON tab1 FOR EACH ROW EXECUTE procedure T_IN
 ```sql
 -- 考生作答
 
-ALTER TRIGGER T_INS_TR ON tab1 DISABLE;
+ALTER TABLE tab1 DISABLE TRIGGER T_INS_TR;
 
 ```
 
@@ -636,7 +747,7 @@ ALTER TRIGGER T_INS_TR ON tab1 DISABLE;
 
 ```sql
 -- 考生作答
-DROP TRIGGER T_INS_TR
+drop TRIGGER T_INS_TR  ON tab1;
 ```
 
 
@@ -678,7 +789,7 @@ insert into selecttive values(2,'语文');
 insert into selecttive values(3,'英语');
 ```
 
-##### 创建触发器，删除stu某一条数据，同时删除selecttive上的相关数据
+##### 创建触发器，删除stuv2某一条数据，同时删除selecttive上的相关数据
 
 ##### (1) 创建触发器函数DELETE_STIVE
 
