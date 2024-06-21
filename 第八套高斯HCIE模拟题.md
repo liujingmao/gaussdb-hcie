@@ -735,12 +735,19 @@ from
 	
 select 
 	t1.sno,
-	t1.math, round(t2.m,2),round((t1.math-t2.m),2) as diff_math_avgm,
-	t1.art,round(t2.a,2),round((t1.art-t2.a),2) as diff_art_avga,
-	t1.physical,round(t2.p,2),round((t1.physical-t2.p),2) as diff_phy_avgp 
+	t1.math, round(t2.m,2) as avg_m,round((t1.math-t2.m),2) as diff_m,
+	t1.art,round(t2.a,2) avg_a,round((t1.art-t2.a),2) as diff_ar,
+	t1.physical,round(t2.p,2) avg_p,round((t1.physical-t2.p),2) as diff_p 
 from 
 	stuv3 t1,
 	(select avg(math) as m,avg(art) as a,avg(physical) as p from stuv3) t2;
+	
+sno  | math | avg_m | diff_m | art | avg_a | diff_ar | physical | avg_p | diff_p
+------+------+-------+--------+-----+-------+---------+----------+-------+--------
+ 1001 |   56 | 69.67 | -13.67 |  85 | 78.67 |    6.33 |       72 | 80.67 |  -8.67
+ 1002 |   66 | 69.67 |  -3.67 |  75 | 78.67 |   -3.67 |       82 | 80.67 |   1.33
+ 1003 |   87 | 69.67 |  17.33 |  76 | 78.67 |   -2.67 |       88 | 80.67 |   7.33
+
 ```
 
 ##### (2) 编写存储过程，输入学生id和科目名称输出对应的绩点值，0-59 给0，60-69给0.1,70-79给0.2, 80-89给0.3,90-100给0.4
@@ -758,10 +765,29 @@ begin
    	case when coursename='math' then select (get_grade_by_score(math)) into grade from stuv3 where sno=id1;
 	when coursename='art' then select (get_grade_by_score(art)) into grade from stuv3 where sno=id1;
 	when coursename='physical' then select (get_grade_by_score(physical)) into grade from stuv3 where sno=id1;
-else raise notice 'please input right course name;';
+else raise notice 'please input right course name';
 end case;
 end;
 /
+-- 结果
+hcie8=# call fun_cal_point('1001','math',null);
+ grade
+-------
+     0
+(1 row)
+
+hcie8=# call fun_cal_point('1001','art',null);
+ grade
+-------
+    .3
+(1 row)
+
+hcie8=# call fun_cal_point('1001','physical',null);
+ grade
+-------
+    .2
+(1 row)
+
 ```
 
 ##### (3) 编写存储过程，根据学号，班级，获取学生的总分
