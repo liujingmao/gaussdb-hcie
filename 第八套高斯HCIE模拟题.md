@@ -260,7 +260,11 @@ insert into scopes values(6,93,88,76,87);
 
 ```sql
 -- 考生作答
-select (chinese+math) as cm,(english+music) as en from scopes;
+select 
+	(chinese+math) as cm,
+	(english+music) as en 
+from 
+	scopes;
  cm  | en
 -----+-----
  178 | 188
@@ -278,8 +282,8 @@ select (chinese+math) as cm,(english+music) as en from scopes;
   ```sql
   create table weight(weight_id int,chinese decimal(10,2),math decimal(10,2),english decimal(10,2), music decimal(10,2));
   
-  insert into weight values(1,0.3,0.2,0.2,0.3);
-  insert into weight values(2,0.2,0.1,0.3,0.4);
+  insert into weight values(1,0.3,0.2,0.2,0.3); -- 策略1
+  insert into weight values(2,0.2,0.1,0.3,0.4); -- 策略2
   ```
 
   ##### 最终效果如下：
@@ -293,7 +297,7 @@ select (chinese+math) as cm,(english+music) as en from scopes;
 
   ```sql
   -- 考生作答
-   select 
+  select 
    	s.student_id,
    	w.weight_id,		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from 
    	scopes s,
@@ -312,6 +316,38 @@ select (chinese+math) as cm,(english+music) as en from scopes;
             5 |         2 |      89.80
             6 |         1 |      86.80
             6 |         2 |      85.00
+            
+            
+   student_id | weight_id | weight_sum
+  ------------+-----------+------------
+            1 |         1 |      91.00
+            1 |         2 |      92.00
+            2 |         1 |      93.70
+            2 |         2 |      96.00
+            3 |         1 |      90.20
+            3 |         2 |      91.30
+            4 |         1 |      89.80
+            4 |         2 |      89.40
+            5 |         1 |      90.20
+            5 |         2 |      89.80
+            6 |         1 |      86.80
+            6 |         2 |      85.00
+            
+  select t1.student_id,weight_sum1,weight_sum2 from 
+   	(select 
+   		student_id,
+   		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum1 
+    	from 
+   	scopes s,
+   	weight w where w.weight_id=1) t1
+    join 
+      (select 
+   		student_id,
+   		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum2 
+    	from 
+   		scopes s,
+   		weight w where w.weight_id=2) t2 on t1.student_id = t2.student_id;
+  
   ```
 
 ##### (3) 结合上面的结果，将一个学生对应的两个权重成绩，合到一行。要求一条SQL语句实现，不能使用临时表
@@ -325,6 +361,7 @@ select (chinese+math) as cm,(english+music) as en from scopes;
 
 ```sql
 -- 考生作答
+-- 优化前
 -- Ans
  select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 from (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id;
 (6 rows)
@@ -338,9 +375,36 @@ select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 f
           5 |       90.20 |       89.80
           6 |       86.80 |       85.00
 (6 rows)
-
 moniti8=#
 
+-- 优化后
+
+select t1.student_id,weight_sum1,weight_sum2 from 
+ 	(select 
+ 		student_id,
+ 		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum1 
+  	from 
+ 	scopes s,
+ 	weight w where w.weight_id=1) t1
+  join 
+    (select 
+ 		student_id,
+ 		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum2 
+  	from 
+ 		scopes s,
+ 		weight w 
+     where w.weight_id=2) t2 
+ on t1.student_id = t2.student_id;
+ -- 结果: 
+ 
+  student_id | weight_sum1 | weight_sum2
+------------+-------------+-------------
+          1 |       91.00 |       92.00
+          2 |       93.70 |       96.00
+          3 |       90.20 |       91.30
+          4 |       89.80 |       89.40
+          5 |       90.20 |       89.80
+          6 |       86.80 |       85.00
 ```
 
 ##### (4)按照两个权重成绩之和的大小，进行从大到小排序，且生成排序序号，要求生成连续排序序号，相同的值有相同的序号。一条SQL语句实现，不能使用临时表。
@@ -354,8 +418,31 @@ moniti8=#
 
 ```sql
 -- 考生作答
-select t3.student_id,t3.weight_sum1,dense_rank() over (partition by 1 order by t3.weight_sum1 desc) as weight_rank1,t3.weight_sum2,dense_rank() over (partition by 1 order by t3.weight_sum2 desc) as weight_rank2 from
-(select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 from (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id) t3;
+select
+	t3.student_id,
+	t3.weight_sum1,
+	dense_rank()
+    	over (partition by 
+              	1 
+              order by 
+              	t3.weight_sum1 desc) as 
+    weight_rank1,
+    t3.weight_sum2,
+    dense_rank() 
+    	over (partition by 
+              	1 
+              order by 
+              	t3.weight_sum2 desc) as 
+    weight_rank2 from
+					 (select 
+                      		t1.student_id,
+                      		t1.weight_sum as weight_sum1,
+                      		t2.weight_sum as weight_sum2 
+                      from 
+                      		(select 
+                             	* 
+                             from 
+                             	(select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id) t3;
 
  student_id | weight_sum1 | weight_rank1 | weight_sum2 | weight_rank2
 ------------+-------------+--------------+-------------+--------------
@@ -365,6 +452,37 @@ select t3.student_id,t3.weight_sum1,dense_rank() over (partition by 1 order by t
           5 |       90.20 |            3 |       89.80 |            4
           4 |       89.80 |            4 |       89.40 |            5
           6 |       86.80 |            5 |       85.00 |            6
+ -- 以上答案虽然可以实现要求，但是比较繁琐，应该优化一下
+          
+ -- 优化一下
+ 
+select t1.student_id,weight_sum1,dense_rank() over (order by weight_sum1 desc) as weight_rank1, weight_sum2,dense_rank() over (order by weight_sum2 desc) as weight_rank2 from 
+ 	(select 
+ 		student_id,
+ 		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum1 
+  	from 
+ 	scopes s,
+ 	weight w where w.weight_id=1) t1
+  join 
+    (select 
+ 		student_id,
+ 		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum2 
+  	from 
+ 		scopes s,
+ 		weight w 
+     where w.weight_id=2) t2 
+ on t1.student_id = t2.student_id;
+ -- 结果: 
+ 
+ student_id | weight_sum1 | weight_rank1 | weight_sum2 | weight_rank2
+------------+-------------+--------------+-------------+--------------
+          2 |       93.70 |            1 |       96.00 |            1
+          1 |       91.00 |            2 |       92.00 |            2
+          3 |       90.20 |            3 |       91.30 |            3
+          5 |       90.20 |            3 |       89.80 |            4
+          4 |       89.80 |            4 |       89.40 |            5
+          6 |       86.80 |            5 |       85.00 |            6
+
 
 ```
 
@@ -602,7 +720,6 @@ insert into score values('1004',3,69),('1004',3,67),('1004',4,84),('1004',4,92);
 
 ```sql
 -- 考生作答
-
 -- create table student(sno varchar(20),sname varchar(50),cno int);
 -- create table class(cno int,cname varchar(50));
 -- create table course(courid int,courname varchar(50));
