@@ -21,28 +21,14 @@ insert into student values(1,'Lee',610,1,1),(2,'Jerry',510,1,1),(5,'Lee',410,1,1
 ##### (1) 输出每月月考部分都比学号为5的同学分数高的所有学生信息
 
 ```sql
-select 
-	* 
-from 
-	student 
-where 
-	month =1 
-and 
-	score > (select score from student where sno = 5 and month = 1) 
-union all 
-	( select 
-     	* 
-     from 
-    	 student 
-     where month =2 
-     and 
-     	score > (select score from student where sno = 5 and month = 2));
+select * from student where sno in (select t1.sno from student t1 join (select month,nvl(score,0) as score from student where sno = 5) t2 on t1.month = t2.month and t1.score > t2.score group by t1.sno having count(t1.sno)=(select count(distinct month) from student));
 ```
 
 ##### (2) 输出每次月考缺考的学生信息，要求打印姓名、班级编号和缺考次数
 
 ```sql
 -- 考生作答
+select sname,cno,count(1) from student where score is null group by sname;
 ```
 
 ##### (3) 输出每次月考和tom同时缺考的所有学生信息，要求打印学号、姓名和月考部分
@@ -57,17 +43,30 @@ union all
 -- 考生作答
 ```
 
-##### (5) 统计每个班月考的最高分数，要求打印班级名称，考试时间和月考次数
+##### (5) 统计每个班月考的最高分数，要求打印班级名称，考试时间和月考分数
 
 ```sql
 -- 考生作答
+select t1.cname,t2.month,max(t2.score) from class t1,student t2 where t1.cno = t2.cno group by t1.cname,t2.month order by month desc;
+
+-- ans
+select t1.cname,t2.month,max(t2.score) from class t1,student t2 where t1.cno = t2.cno group by t1.cname,t2.month order by cname,month;
+ cname  | month | max
+--------+-------+-----
+ class1 |     1 | 610
+ class1 |     2 | 510
+ class1 |     3 | 510
+ class2 |     1 | 400
+ class2 |     2 | 600
+ class2 |     3 | 410
+
 ```
 
 #### 2. SQL应用2
 
 ##### 同上表
 
-##### (1) 输出class1班级中比班级class2班级每月月考最低分还低的学生信息，要求打印学号、姓名和月考部分。
+##### (1) 输出class1班级中比班级class2班级每月月考最低分还低的学生信息，要求打印学号、姓名和月考总分。
 
 ```sql
 -- 考生作答
@@ -77,12 +76,38 @@ union all
 
 ```sql
 -- 考生作答
+select 
+	sno,
+	sname,
+	round(avg(nvl(score,0)),2) avgscore 
+from 
+	student 
+group by 
+	sno,sname 
+having avgscore = (select max(t1.ag) from (select round(avg(nvl(score,0)),2) as ag from student group by sno,sname) t1);
+
+ sno | sname | avgscore
+-----+-------+----------
+   2 | Jerry |   510.00
+
 ```
 
 ##### (3) 输出每个学生月考平均分和最高月考平均分学生之间的分数差距，打印学号、姓名、月考平均分和差距分数。
 
 ```sql
 -- 考生作答
+select 
+	sno,
+	sname,
+	round(avg(nvl(score,0)),2) avgscore,
+    ((select max(t1.ag) from (select round(avg(nvl(score,0)),2) as ag from student group by sno,sname) t1) - avgscore) diff
+from 
+	student 
+group by 
+	sno,sname;
+    
+-- ans
+select sno,sname,round(avg(nvl(score,0)),2) as avgscore,(select max(t1.ag) from (select round(avg(nvl(score,0)),2) as ag from student group by sno) t1) - avgscore from student group by sno,sname;
 ```
 
 #### 3. SQL应用3
@@ -335,6 +360,10 @@ select t3.student_id,t3.weight_sum1,dense_rank() over (partition by 1 order by t
 ##### 当前有一张表create table test(student_id int,class_id int,kemu varchar2(20),score int); 有8w条数据
 
 ```sql
+-- create table
+
+create table test(student_id int,class_id int,kemu varchar2(20),score int); 
+
 -- 插入数据
 insert into test values(1,202202,'yuwen',88);
 insert into test values(2,202202,'shuxue',100);
@@ -364,7 +393,32 @@ and
 
 ```sql
 -- 考生作答
+-- 原SQL: 
+select 
+	* 
+from 
+	test t1 
+join 
+	(select max(score) as ms from test where class_id='202201') t2 
+on 
+	t1.score > t2.ms 
+where 
+	t1.class_id = '202202';
 
+-- create table test(student_id int,class_id int,kemu varchar2(20),score int); 
+select 
+	t1.student_id,
+	t1.class_id,
+	t1,kemu,
+	t1.score
+from 
+	test t1 
+join 
+	(select max(score) as ms from test where class_id='202201') t2 
+on 
+	t1.score > t2.ms 
+where 
+	t1.class_id = '202202';
 ```
 
 #### 6. 性能优化2
