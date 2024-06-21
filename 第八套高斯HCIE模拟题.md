@@ -316,38 +316,6 @@ from
             5 |         2 |      89.80
             6 |         1 |      86.80
             6 |         2 |      85.00
-            
-            
-   student_id | weight_id | weight_sum
-  ------------+-----------+------------
-            1 |         1 |      91.00
-            1 |         2 |      92.00
-            2 |         1 |      93.70
-            2 |         2 |      96.00
-            3 |         1 |      90.20
-            3 |         2 |      91.30
-            4 |         1 |      89.80
-            4 |         2 |      89.40
-            5 |         1 |      90.20
-            5 |         2 |      89.80
-            6 |         1 |      86.80
-            6 |         2 |      85.00
-            
-  select t1.student_id,weight_sum1,weight_sum2 from 
-   	(select 
-   		student_id,
-   		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum1 
-    	from 
-   	scopes s,
-   	weight w where w.weight_id=1) t1
-    join 
-      (select 
-   		student_id,
-   		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum2 
-    	from 
-   		scopes s,
-   		weight w where w.weight_id=2) t2 on t1.student_id = t2.student_id;
-  
   ```
 
 ##### (3) 结合上面的结果，将一个学生对应的两个权重成绩，合到一行。要求一条SQL语句实现，不能使用临时表
@@ -379,7 +347,11 @@ moniti8=#
 
 -- 优化后
 
-select t1.student_id,weight_sum1,weight_sum2 from 
+select 
+	t1.student_id,
+	weight_sum1,
+	weight_sum2 
+from 
  	(select 
  		student_id,
  		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum1 
@@ -394,7 +366,9 @@ select t1.student_id,weight_sum1,weight_sum2 from
  		scopes s,
  		weight w 
      where w.weight_id=2) t2 
- on t1.student_id = t2.student_id;
+ on 
+ 	t1.student_id = t2.student_id;
+ 
  -- 结果: 
  
   student_id | weight_sum1 | weight_sum2
@@ -456,13 +430,19 @@ select
           
  -- 优化一下
  
-select t1.student_id,weight_sum1,dense_rank() over (order by weight_sum1 desc) as weight_rank1, weight_sum2,dense_rank() over (order by weight_sum2 desc) as weight_rank2 from 
+select 
+	t1.student_id,
+	weight_sum1,
+	dense_rank() over (order by weight_sum1 desc) as weight_rank1, 		  				     weight_sum2,
+	dense_rank() over (order by weight_sum2 desc) as weight_rank2 
+from 
  	(select 
  		student_id,
- 		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum1 
+ 		(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as 		weight_sum1 
   	from 
- 	scopes s,
- 	weight w where w.weight_id=1) t1
+ 		scopes s,
+ 		weight w 
+     where w.weight_id=1) t1
   join 
     (select 
  		student_id,
@@ -471,7 +451,8 @@ select t1.student_id,weight_sum1,dense_rank() over (order by weight_sum1 desc) a
  		scopes s,
  		weight w 
      where w.weight_id=2) t2 
- on t1.student_id = t2.student_id;
+ on 
+ 	t1.student_id = t2.student_id;
  -- 结果: 
  
  student_id | weight_sum1 | weight_rank1 | weight_sum2 | weight_rank2
@@ -563,7 +544,6 @@ create table student2(
     sname varchar(20),
     sno int
 );
-
 insert into student2 values(1,'a',10);
 insert into student2 values(2,'b',20);
 insert into student2 values(3,'c',30);
@@ -585,8 +565,6 @@ insert into score1 values(2,'math',60);
 insert into score1 values(3,'math',80);
 insert into score1 values(4,'math',100);
 
-
-
 create table score2(
 	sid int,
     course varchar(20),
@@ -598,8 +576,6 @@ insert into score2 values(6,'yuwen',70);
 insert into score2 values(7,'yuwen',80);
 insert into score2 values(8,'yuwen',90);
 ```
-
-
 
 #####  (1) 查202201班级和202202班级所有人语文化成绩前2的记录，第一个查询要用union
 
@@ -866,8 +842,6 @@ ALTER TABLE tab1 DISABLE TRIGGER T_INS_TR;
 -- 考生作答
 drop TRIGGER T_INS_TR  ON tab1;
 ```
-
-
 
 #### 10. 触发器2
 
