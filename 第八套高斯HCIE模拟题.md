@@ -212,7 +212,15 @@ in
          order by 
          	am 
          desc limit 5));
-         
+ 
+ id | sum_score
+----+-----------
+  1 |       250
+  2 |       280
+  4 |       299
+  5 |       307
+  7 |       282
+  
  -- join 方法  
    
 select 
@@ -344,9 +352,7 @@ select t1.student_id,t1.weight_sum as weight_sum1,t2.weight_sum as weight_sum2 f
           6 |       86.80 |       85.00
 (6 rows)
 moniti8=#
-
 -- 优化后
-
 select 
 	t1.student_id,
 	weight_sum1,
@@ -392,31 +398,22 @@ from
 
 ```sql
 -- 考生作答
-select
+select 
 	t3.student_id,
 	t3.weight_sum1,
-	dense_rank()
-    	over (partition by 
-              	1 
-              order by 
-              	t3.weight_sum1 desc) as 
-    weight_rank1,
-    t3.weight_sum2,
-    dense_rank() 
-    	over (partition by 
-              	1 
-              order by 
-              	t3.weight_sum2 desc) as 
-    weight_rank2 from
-					 (select 
-                      		t1.student_id,
-                      		t1.weight_sum as weight_sum1,
-                      		t2.weight_sum as weight_sum2 
-                      from 
-                      		(select 
-                             	* 
-                             from 
-                             	(select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 left join (select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 on t1.student_id = t2.student_id) t3;
+	dense_rank() over (partition by 1 order by t3.weight_sum1 desc) as weight_rank1,
+	t3.weight_sum2,
+	dense_rank() over (partition by 1 order by t3.weight_sum2 desc) as weight_rank2 
+from 
+	(select 
+     	t1.student_id,
+     	t1.weight_sum as weight_sum1,
+     	t2.weight_sum as weight_sum2 
+     from 
+     	(select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=1) t1 
+     left join 
+     	(select * from (select s.student_id,w.weight_id,(w.chinese*s.chinese+w.math*s.math+w.english*s.english+w.music*s.music) as weight_sum from scopes s,weight w) where weight_id=2) t2 
+     on t1.student_id = t2.student_id) t3;
 
  student_id | weight_sum1 | weight_rank1 | weight_sum2 | weight_rank2
 ------------+-------------+--------------+-------------+--------------
