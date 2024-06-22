@@ -55,9 +55,6 @@ from
      from 
      	student) 
  where rk <=3;
-
--- 方法2 
-(select * from student where cno = 1 order by score desc limit 3) union all (select * from student where cno = 2 order by score desc limit 3);
 ```
 
 #### 2. 常用系统表查询 
