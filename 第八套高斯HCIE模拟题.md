@@ -21,14 +21,49 @@ insert into student values(1,'Lee',610,1,1),(2,'Jerry',510,1,1),(5,'Lee',410,1,1
 ##### (1) 输出每月月考部分都比学号为5的同学分数高的所有学生信息
 
 ```sql
-select * from student where sno in (select t1.sno from student t1 join (select month,nvl(score,0) as score from student where sno = 5) t2 on t1.month = t2.month and t1.score > t2.score group by t1.sno having count(t1.sno)=(select count(distinct month) from student));
+select 
+	* 
+from 
+	student 
+where 
+	sno 
+in 
+	(select 
+     	t1.sno 
+     from 
+     	student t1 
+     join 
+     	(select 
+         	month,
+         	nvl(score,0) as score 
+         from 
+         	student 
+         where 
+         	sno = 5) t2 
+ on 
+     t1.month = t2.month 
+and 
+     t1.score > t2.score 
+group by 
+     t1.sno 
+ having 
+     count(t1.sno)=(select count(distinct month) from student));
 ```
 
 ##### (2) 输出每次月考缺考的学生信息，要求打印姓名、班级编号和缺考次数
 
 ```sql
 -- 考生作答
-select sname,cno,count(1) from student where score is null group by sname;
+select 
+	sname,
+	cno,
+	count(1) 
+from 
+	student 
+where 
+	score is null 
+group by 
+	sname;
 ```
 
 ##### (3) 输出每次月考和tom同时缺考的所有学生信息，要求打印学号、姓名和月考部分
@@ -47,10 +82,36 @@ select sname,cno,count(1) from student where score is null group by sname;
 
 ```sql
 -- 考生作答
-select t1.cname,t2.month,max(t2.score) from class t1,student t2 where t1.cno = t2.cno group by t1.cname,t2.month order by month desc;
+select 
+	t1.cname,
+	t2.month,
+	max(t2.score) 
+from 
+	class t1,student t2 
+where 
+	t1.cno = t2.cno 
+group by 
+	t1.cname,
+	t2.month 
+order by 
+	month desc;
 
 -- ans
-select t1.cname,t2.month,max(t2.score) from class t1,student t2 where t1.cno = t2.cno group by t1.cname,t2.month order by cname,month;
+select 
+	t1.cname,
+	t2.month,
+	max(t2.score) 
+from 
+	class t1,
+	student t2 
+where 
+	t1.cno = t2.cno 
+group by 
+	t1.cname,
+	t2.month 
+order by 
+	cname,
+	month;
  cname  | month | max
 --------+-------+-----
  class1 |     1 | 610
@@ -97,7 +158,15 @@ from
 	student 
 group by 
 	sno,sname 
-having avgscore = (select max(t1.ag) from (select round(avg(nvl(score,0)),2) as ag from student group by sno,sname) t1);
+having avgscore = (select 
+                   		max(t1.ag) 
+                   from 
+                   		(select 
+                         		round(avg(nvl(score,0)),2) as ag 
+                         from 
+                         		student 
+                         group by 
+                         		sno,sname) t1);
 
  sno | sname | avgscore
 -----+-------+----------
