@@ -96,7 +96,8 @@ from
 	(select 
      	*,
      	round((avg(nvl(score,0)) over (partition by month)),2) as avgscore 
-     from student) 
+     from 
+     	student) 
  where score > avgscore;
  id | score | month | avgscore
 ----+-------+-------+----------
@@ -151,42 +152,12 @@ select
 	round(avg(nvl(score,0)),2) as avgscore,
 	avgscore-lag(avgscore) over (order by month) as diff 
 from 
-	student group by month order by month;
+	student 
+group by 
+	month 
+order by 
+	month;
 		
--- 考生作答
--- 一开始理解有误的解法
-select t1.id,nvl(t1.score,0),t1.month,avgscore,nvl(t1.score,0)-avgscore as diff from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month;
- id | nvl | month | avgscore |  diff
-----+-----+-------+----------+--------
-  1 |  56 |     1 |    40.67 |  15.33
-  2 |  68 |     1 |    40.67 |  27.33
-  4 |  67 |     1 |    40.67 |  26.33
-  6 |  53 |     1 |    40.67 |  12.33
-  1 |  56 |     2 |    48.33 |   7.67
-  2 |  68 |     2 |    48.33 |  19.67
-  4 |  67 |     2 |    48.33 |  18.67
-  5 |  99 |     2 |    48.33 |  50.67
-  3 |   0 |     1 |    40.67 | -40.67
-  5 |   0 |     1 |    40.67 | -40.67
-  3 |   0 |     2 |    48.33 | -48.33
-  6 |   0 |     2 |    48.33 | -48.33
-
- select t1.id,nvl(t1.score,0),t1.month,avgscore,nvl(t1.score,0)-avgscore as diff from student as t1 join (select month,round(avg(nvl(score,0)),2) as avgscore from student group by month) t2 on t1.month=t2.month order by id;
- id | nvl | month | avgscore |  diff
-----+-----+-------+----------+--------
-  1 |  56 |     1 |    40.67 |  15.33
-  1 |  56 |     2 |    48.33 |   7.67
-  2 |  68 |     1 |    40.67 |  27.33
-  2 |  68 |     2 |    48.33 |  19.67
-  3 |   0 |     1 |    40.67 | -40.67
-  3 |   0 |     2 |    48.33 | -48.33
-  4 |  67 |     2 |    48.33 |  18.67
-  4 |  67 |     1 |    40.67 |  26.33
-  5 |  99 |     2 |    48.33 |  50.67
-  5 |   0 |     1 |    40.67 | -40.67
-  6 |  53 |     1 |    40.67 |  12.33
-  6 |   0 |     2 |    48.33 | -48.33
-
 ```
 
 #### 2. 数据库对象管理及SQL应用2
@@ -273,16 +244,17 @@ where
 
 ```sql
 -- 考生作答
-select t1.relname,
-	   t3.nodeoids 
+select 
+	t1.relname,
+	t3.nodeoids 
 from 
 	pg_class t1,
 	pg_namespace t2,
 	pgxc_class t3 
 where 
-	t1.oid = t3.pcrelid 
+	t1.oid = t3.pcrelid   -- 与pg_class oid 字段  与 pgxc_class 的pcrelid 关联
 and 
-	t1.relnamespace = t2.oid 
+	t1.relnamespace = t2.oid  -- pg_class 与 pg_namespace 的oid字段关联
 and 
 	relname = 'lineitem' 
 and 
@@ -383,6 +355,9 @@ hcie7=# select count(datname) from pg_stat_activity where datname = 'postgres';
 
 ```sql
 -- 考生作答，这个会话数量，之前没有遇到过,
+select count(*) from (
+	select sa.sessionid as sid from pg_stat_get_activity() where sa.application_name=''
+);??????
 ```
 
 ##### (7) 查询库最大连接数???
@@ -428,8 +403,11 @@ CREATE ROLE
 ```sql
 -- 考生作答
 -- 根据题目意思，先给user3select权限，再打开行级策略
+-- 赋权
 grant select on t_test to user3;
+-- 修改表的行极访问策略
 alter table t_test enable row level security;
+-- 创建行级访问策略
 create row level security policy lsp_for_user3 on t_test to user3 using(id=3);
 -- 设置完成行级访问策略，记得验证，验证时会发现权限不够，报错
 ```
@@ -438,7 +416,7 @@ create row level security policy lsp_for_user3 on t_test to user3 using(id=3);
 
 ```sql
 -- 考生作答
-alter row level security policy lsp_for_user3 on t_test using(id = 1 or id = 2);
+alter row level security policy lsp_for_user3 on t_test to user3 using(id = 1 or id = 2);
 ```
 
 ##### (4) 当前有一张用户表t_user(id,age),请创建两名用户u1和u2,密码均为'test@123'
@@ -458,11 +436,12 @@ grant select on t_user to u1;
 grant select on t_user to u2;
 -- 2. 打开行级访问策略控制
 alter table t_user enable row level security;
-
+-- 创建行级访问策略
 create row level security policy lsp_for_u1 on t_user to u1 using(id=current_user);
-
+-- 创建行级访问策略
 create row level security policy lsp_for_u2 on t_user to u2 using(id=current_user);
-
+-- 合并两个创建行级访问策略
+create row level security policy lsp_for_u12 on t_user to u1,u2 using(id=current_user);
 ```
 
 ##### (6) 加一个级别访问控制让u1只能看自己且年龄30以下的数据
@@ -553,7 +532,7 @@ hcie7=# call get_score_by_course('c2',null);
 
 create or replace procedure get_score_by_cid(cid_score inout varchar(20)) as
 begin
-	cid_score = concat('''',cid_score,'''');
+	cid_score = concat('''',cid_score,''''); -- 这个是四个单引号哦
 	select score into cid_score from score where cid = cid_score;
 end;
 /
@@ -743,7 +722,9 @@ union
  	score2 t4 
  on 
  	t3.id = t4.id)
-order by id,score desc;
+order by 
+	id,score 
+desc;
 ```
 
 ##### (2) 对以上SQL语句进行优化
@@ -771,7 +752,8 @@ union all --- 因为在不同的班级里，可以使用union all
  	score2 t4 
  on 
  	t3.id = t4.id)
-order by id score desc;
+order by 
+	id,score desc;
 ```
 
 ##### (3) 查看两个班级相同的科目，202201班在score1中不存在的成绩，要求使用not in
