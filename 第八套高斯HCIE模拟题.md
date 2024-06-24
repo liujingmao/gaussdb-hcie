@@ -103,12 +103,32 @@ and
 
 ```
 
-##### (4) 输出全校月考中位数分数
+##### (4) 输出全校月考中位数分数(GaussDB分布式没有median函数)
 
 ```sql
 -- 考生作答
-select month,round(avg(score),2) from 
-(select student.*,count,row_number() over(partition by student.month order by nvl(score,0)) as rowno from student (select month,count(1) as count from student group by month) tcount where student.month=tcount.month) where case when count%2=0 then rowno=(count/2) or rowno=(count/2)+1 else rowno = ceil(count/2) end group by month;
+select 
+	month,
+	round(avg(score),2) as median_score
+from 
+	(select 
+     	student.*,
+     	count,
+     	row_number() over(partition by student.month order by nvl(score,0)) as rowno 
+    from 
+     	student,
+     	(select month,count(1) as count from student group by month) tcount 
+     where 
+     	student.month=tcount.month) 
+where case when 
+			count%2=0 
+		then 
+			rowno=(count/2) or rowno=(count/2)+1 
+	  else 
+	  		rowno = ceil(count/2) 
+	  end 
+group by 
+		month;
 ```
 
 ##### (5) 统计每个班月考的最高分数，要求打印班级名称，考试时间和月考分数
