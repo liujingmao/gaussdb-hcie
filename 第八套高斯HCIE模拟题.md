@@ -63,7 +63,8 @@ from
 where 
 	score is null 
 group by 
-	sname;
+	sname,
+	cno;
 ```
 
 ##### (3) 输出每次月考和tom同时缺考的所有学生信息，要求打印学号、姓名和月考总分
@@ -80,8 +81,19 @@ join
 on 
 	student.sno = t1.sno 
 join 
-	(select month,count(1) over(partition by sno) from student where sname = 'Tom' and score is null) t2 
-on t1.month = t2.month and t1.count = t2.count;
+	(select 
+     	month,
+     	count(1) over(partition by sno) 
+     from 
+     	student 
+     where 
+     	sname = 'Tom' 
+     and 
+     	score is null) t2 
+on 
+	t1.month = t2.month 
+and 
+	t1.count = t2.count;
 
  sno | sname | score
 -----+-------+-------
@@ -95,6 +107,8 @@ on t1.month = t2.month and t1.count = t2.count;
 
 ```sql
 -- 考生作答
+select month,round(avg(score),2) from 
+(select student.*,count,row_number() over(partition by student.month order by nvl(score,0)) as rowno from student (select month,count(1) as count from student group by month) tcount where student.month=tcount.month) where case when count%2=0 then rowno=(count/2) or rowno=(count/2)+1 else rowno = ceil(count/2) end group by month;
 ```
 
 ##### (5) 统计每个班月考的最高分数，要求打印班级名称，考试时间和月考分数
