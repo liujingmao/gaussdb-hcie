@@ -459,20 +459,21 @@ CREATE AUDIT POLICY
 ##### (5) 创建postgres, 创建表tb1,创建审计策略adt3,仅审计记录用户root,在执行针对表tb1资源进行select,insert,delete操作数据库创建审计策略
 
 ```sql
-create resource label rl_for_adt3 add table(tb1);
-CREATE RESOURCE LABEL
-openGauss=# create audit policy adt3 access select on label(rl_for_adt3),insert on label(rl_for_adt3),delete on label(rl_for_adt3) filter on roles(omm);
-CREATE AUDIT POLICY
-openGauss=# create audit policy adtroot access select on label(rl_for_adt3),insert on label(rl_for_adt3),delete on label(rl_for_adt3) filter on roles(root);
-ERROR:  role: [root] is invalid
-openGauss=#
+
+
+-- 1. create table
+create table tb1(c1 int);
+-- 2. create resource label
+create resource lable rls_adt3 add table(tb1);
+-- 3. create audit polic
+create audit policy adt3 access select on label(rls_adt3),insert on label(),delete on label() filter on roles(root);
+
 ```
 
 ##### (6) 为统一审计对象adt1,增加描述'audit policy for tb1'
 
 ```sql
-openGauss=# alter audit policy adt1 comments 'audit policy for tb1';
-ALTER AUDIT POLICY
+openGauss=# alter audit policy adt1 comments 'audit policy for tb1'; -- 内容只能用单引号？
 ```
 
 ##### (7) 修改adt1，使之对地址IP地址为'10.20.30.40'的场景生效
@@ -500,8 +501,6 @@ drop resource label rl_for_adt3;
 DROP AUDIT POLICY
 drop user user3 cascade;
 ```
-
-
 
 #### 5. 存储过程
 
@@ -653,6 +652,10 @@ hcie2=# select * from department;
 
 ```sql
 -- 考生作答
+-- 当触发器存在时会将触发器删除
+drop trigger if exists DEPARTMENT on DEPARTMENT;
+-- drop trigger if exists trigger name on tablename;
+-- drop trigger if exists triggername on tablename;
 hcie2=# alter table department enable trigger Tri_update_D;
 ALTER TABLE
 hcie2=# update department set number_of_senior = 20 where id =1;
@@ -697,12 +700,10 @@ analyze tb_user;
 
 ```sql
 SQL1： explain analyze select * from tb_user where age = 29 and stu_name = 'xiaoming';
-
-SQL1: explain analyze select * from tb_user where stu_no = 100 and age = 29;
+SQL2:  explain analyze select * from tb_user where stu_no = 100 and age = 29;
 ```
 
 ```sql
--- 考生作答
 -- 考生作答
 SQL1:
 select gs_index_advise('select * from tb_user where age=29 and stu_name = "xiaoming"');
