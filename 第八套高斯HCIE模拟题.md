@@ -46,7 +46,7 @@ and
      t1.score > t2.score 
 group by 
      t1.sno 
- having 
+having 
      count(t1.sno)=(select count(distinct month) from student));
 ```
 
@@ -66,10 +66,29 @@ group by
 	sname;
 ```
 
-##### (3) 输出每次月考和tom同时缺考的所有学生信息，要求打印学号、姓名和月考部分
+##### (3) 输出每次月考和tom同时缺考的所有学生信息，要求打印学号、姓名和月考总分
 
 ```sql
 -- 考生作答
+select 
+	student.sno,
+	sname,score 
+from 
+	student 
+join
+	(select sno,month,count(1) over (partition by sno) from student where score is null and sname !='Tom') t1 
+on 
+	student.sno = t1.sno 
+join 
+	(select month,count(1) over(partition by sno) from student where sname = 'Tom' and score is null) t2 
+on t1.month = t2.month and t1.count = t2.count;
+
+ sno | sname | score
+-----+-------+-------
+   5 | Lee   |   410
+   5 | Lee   |   210
+   5 | Lee   |
+
 ```
 
 ##### (4) 输出全校月考中位数分数
@@ -87,7 +106,8 @@ select
 	t2.month,
 	max(t2.score) 
 from 
-	class t1,student t2 
+	class t1,
+	student t2 
 where 
 	t1.cno = t2.cno 
 group by 
@@ -131,11 +151,18 @@ order by
 
 ```sql
 -- 考生作答
-
 -- 以month 分组,求出class2班的最低分
-select month,min(score) from student where cno = (select sno from class where cname = 'class2') group by month;
-
-select t1.sno,t1.sname,t1.score from (select * from  student where cno = (select cno from class where cname='class1')) t1 join (select month,min(score) as ms from student where cno = (select sno from class where cname = 'class2') group by month) t2 on t1.month = t2.month and nvl(t1.score,0) < t2.ms; 
+select 
+	t1.sno,
+	t1.sname,
+	t1.score 
+from 
+	(select * from  student where cno = (select cno from class where cname='class1')) t1 join 
+	(select month,min(score) as ms from student where cno = (select sno from class where cname = 'class2') group by month) t2 
+on
+	t1.month = t2.month 
+and 
+	nvl(t1.score,0) < t2.ms; 
 
 sno | sname | score
 -----+-------+-------
