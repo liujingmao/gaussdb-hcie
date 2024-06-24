@@ -668,26 +668,33 @@ insert into score2 values(5,'yuwen',60);
 insert into score2 values(6,'yuwen',70);
 insert into score2 values(7,'yuwen',80);
 insert into score2 values(8,'yuwen',90);
+
+-- update table score2 set score = 88 where sid =8;
 ```
 
 #####  (1) 查202201班级和202202班级所有人语文化成绩前2的记录，第一个查询要用union
 
 ```sql
 -- 考生作答
-select * from 
-(select sid,course,score from score1 where course = 'yuwen' order by score desc limit 2) union
-(select sid,course,score from score2 where course = 'yuwen' order by score desc limit 2);
-
+select 
+	sid,
+	course,
+	score 
+from 
+	((select * from score1) union (select * from score2)) 
+where 
+	course = 'yuwen' 
+order by 
+	score 
+desc limit 2;
+ sid | course | score
+-----+--------+-------
+   4 | yuwen  |    90
+   8 | yuwen  |    88
 -- ans
 select sid,course,score,rk from (select *,rank() over (order by score desc) as rk from ((select sid,course,score from score1 where course = 'yuwen') union (select sid,course,score from score2 where course = 'yuwen'))) where rk <=2;
 
 select sid,course,score,rk from (select *,rank() over (order by score desc) as rk from ((select sid,course,score from score1) union (select sid,course,score from score2))) where rk <=2 and course='yuwen';
-
-select sid,course,score from ((select * from score1) union (select * from score2)) where course = 'yuwen' order by score desc limit 2;
- sid | course | score
------+--------+-------
-   8 | yuwen  |    90
-   7 | yuwen  |    80
 
 ```
 
@@ -700,8 +707,7 @@ hcie8=# select sid,course,score from ((select * from score1) union all(select * 
    8 | yuwen  |    90
    7 | yuwen  |    80
      
- -- ans
- 
+ -- ans 
 select sid,course,score,rk from (select *,rank() over (order by score desc) as rk from ((select sid,course,score from score1) union all (select sid,course,score from score2))) where rk <=2 and course='yuwen';
 
 ```
@@ -710,22 +716,53 @@ select sid,course,score,rk from (select *,rank() over (order by score desc) as r
 
 ```sql
 -- 考生作答
-
-select * from score1 t1 wehre score not in (select score from score2 t2 where t1.course = t2.course);
+select
+	* 
+from 
+	score1 t1 
+where 
+	score 
+not in 
+	(select 
+     	score 
+    from 
+     	score2 t2 
+     where 
+     	t1.course = t2.course);
 ```
 
 ##### (4) 对以上SQL语句进行优化
 
 ```sql
 -- 考生作答
-select * from score1 t1 wehre not exists (select score from score2 t2 where t1.course = t2.course and t1.score = t2.score);
+select 
+	* 
+from 
+	score1 t1 
+where not exists 
+	(select 
+     	score 
+     from 
+     	score2 t2 
+     where 
+     	t1.course = t2.course 
+     and 
+     	t1.score = t2.score);
+ where * from score1 t1 where not exists (select * from score2 t2 where t1.course = t2.course and t1.socre = t2.score);
 ```
 
 ##### (5) 查询班级202201语文成绩最高的学生，要求先创建索引，并且能保证一定会使用索引 
 
 ```sql
 -- 考生作答
-select * from score1
+-- 收集统计信息
+analyze;
+-- 索引推荐
+select gs_index_advise('select * from student where sid in (select sid from score1 where course = 'yuwen') and score = (select max(score) from score1 where course = 'yuwen')');
+-- 创建索引
+create index index_name on score1(course);
+-- 调用查询 
+select /*indexscan(index_name)*/ * from from student where sid in (select sid from score1 where course = 'yuwen') and score = (select max(score) from score1 where course = 'yuwen'); 
 ```
 
 ##### (6) 查询202201班级的学生的成绩比202202班级的学生最高成绩还要大的学生信息，对以下给出的SQL进行改写
@@ -734,28 +771,50 @@ select * from score1
 -- 原:SQL: 
 select 
 	stu.sid,
+	stu.sno,
 	stu.sname,
 	sum(score) sumscore 
 from 
-	student stu,
+	student2 stu,
 	score1 s1 
 where
 	stu.sid = s1.sid
 group by
 	stu.sid,
+	stu.sno,
 	stu.sname
 having sumscore > (select 
                    		max(score) 
                    from (select 
-                         	sum() score 
+                         	sum(score) score 
                          from 
                          	score2 
-                         group by sid));
+                         group by sid))
+order by sumscore desc; 
 ```
 
 ```sql
 -- 考生作答
-
+select
+	t1.sid,
+	t1.sno,
+	t1.sname,
+	sum(score) sumscore 
+from 
+	student2 t1 
+join 
+	score1 t2 
+on 
+	t1.sid = t2.sid 
+cross join 
+	(select max(score) maxscore from (select sum(score) score from score2 group by sid)) 
+group by 
+	t1.sid,
+	t1.sno,
+	t1.sname,
+	maxscore 
+having sumscore > maxscore 
+order by sumscore desc;
 ```
 
 #### 7.  性能优化3
