@@ -48,7 +48,8 @@ from
      	residents 
     where 
      	age < 1) 
- group  by buiding;
+ group  by 
+ 	buiding;
  buiding | count
 ---------+-------
        6 |     1
@@ -194,6 +195,140 @@ hcie5=# select t2.age_group,sum(t2.nutrition_value*t1.n) from (select t.age_grou
 ```
 
 ##### 2. 数据库对象管理及SQL语法2(周第六套一样)
+
+##### 当前有一张订单表lineitem,具体字段如下
+
+```sql
+-- 字段说明
+L_ORDERKEY BIGINT NOT NULL  -- 订单key
+L_PARTKEY BIGINT NOT NULL -- 配件key
+L_SUPPKEY BIGINT NOT NULL -- 供应商key
+L_LINENUMBER BIGINT NOT NULL -- 流水号
+L_QUANTITY float8 NOT NULL -- 数量
+L_EXTENDEPPRICE float8 NOT NULL -- 出厂价
+L_DISCOUNT float8 NOT NULL -- 折扣
+L_TAX float8 NOT NULL -- 税点
+L_RETURNFLAG CHAR(1) NOT NULL -- 原反标志
+L_LINESTATUS CHAR(1) NOT NULL -- 明细
+L_SHIPDATE DATE NOT NULL -- 发货日期
+L_COMMITDATE DATA NOT NULL -- 预计到达日期
+L_ARRIVALDATE DATA NOT NULL -- 到达日期
+L_ORDERSTRATEGY CHAR(32) NOT NULL  -- 订单处理策略
+L_TRANSPORTROUTE CHAR(32) NOT NULL -- 运输路径
+L_COMMENT VARCHAR(64) NOT NULL -- 备注
+```
+
+##### 数据导入
+
+```sql
+insert into lineitem values();
+```
+
+##### (1) 创建分区表，根据上述字段信息创建分区表，按L_SHIPDATE分区，按年份1993，1994，1995，1996，1997，1998，1999，分区名称分别是L_SHIPDATE_1,第二个分区名L_SHIPDATE_2，以此类推，使用L_ORDERBYKEY进行哈希分布，建表完成执行上方数据导入代码，进行数据导入。
+
+```sql
+-- 作答区
+create table lineitem (
+L_ORDERKEY BIGINT NOT NULL,  -- 订单key
+L_PARTKEY BIGINT NOT NULL, -- 配件key
+L_SUPPKEY BIGINT NOT NULL, -- 供应商key
+L_LINENUMBER BIGINT NOT NULL, -- 流水号
+L_QUANTITY float8 NOT NULL, -- 数量
+L_EXTENDEPPRICE float8 NOT NULL, -- 出厂价
+L_DISCOUNT float8 NOT NULL, -- 折扣
+L_TAX float8 NOT NULL, -- 税点
+L_RETURNFLAG CHAR(1) NOT NULL, -- 原反标志
+L_LINESTATUS CHAR(1) NOT NULL, -- 明细
+L_SHIPDATE DATE NOT NULL, -- 发货日期
+L_COMMITDATE DATA NOT NULL, -- 预计到达日期
+L_ARRIVALDATE DATA NOT NULL, -- 到达日期
+L_ORDERSTRATEGY CHAR(32) NOT NULL,  -- 订单处理策略
+L_TRANSPORTROUTE CHAR(32) NOT NULL, -- 运输路径
+L_COMMENT VARCHAR(64) NOT NULL, -- 备注
+) distribute by hash(L_ORDERBYKEY),
+partition by range(L_SHIPDATE)(
+partition L_SHIPDATE_1 values less than ('1993-01-01'),
+partition L_SHIPDATE_2 values less than ('1994-01-01'),
+partition L_SHIPDATE_3 values less than ('1995-01-01'),
+partition L_SHIPDATE_4 values less than ('1996-01-01'),
+partition L_SHIPDATE_5 values less than ('1997-01-01'),
+partition L_SHIPDATE_6 values less than ('1998-01-01'),
+partition L_SHIPDATE_7 values less than ('1999-01-01'));
+```
+
+##### (2) 查询表的schema名称，展示表名，schema名称
+
+```sql
+-- 作答区
+select tablename,schemaname from pg_tables where tablename = 'lineitem';
+```
+
+##### (3) 查看表分布节点的oid, 展示表名，nodeoids
+
+```sql
+-- 作答区
+select 
+	t1.relname,
+	t2.nodeoids 
+from 
+	pg_class t1,
+	pgxc_class t2,
+	pg_namespace t3 
+where 
+	t1.oid = t2.pcrelid 
+and 
+	t1.relnamespace  = t3.oid 
+and 
+	t1.relname = 'lineitem' 
+and 
+	t3.nspname = 'public';
+	-- 
+	
+select 
+	t1.relname,
+	t2.nodeoids,
+    t1.relnamespace
+from 
+	pg_class t1,
+	pgxc_class t2,
+	pg_namespace t3 
+where 
+	t1.oid = t2.pcrelid 
+and 
+	t1.relnamespace  = t3.oid 
+and 
+	t1.relname = 'lineitem' 
+and 
+	t3.nspname = 'public';
+```
+
+##### (4) 查看表所在实例的信息
+
+```sql
+-- 作答区
+select 
+	t4.* 
+from 
+	pg_class t1,
+	pg_namespace t2,
+	pgxc_class t3,
+	pgxc_node t4 
+where 
+	t1.oid = t3.pcrelid 
+and 
+	t1.relnamespace = t2.oid 
+and 
+	t3.nodeoids::varchar = t4.oid::varchar 
+and 
+	t1.relname = 'lineitem' 
+and 
+	t2.nspname = 'public';
+
+select t4.* from pg_class t1,pg_namespace t2,pgxc_class t3,pgxc_node t4 
+where t1.oid = t3.pcrelid and t1.relnamespace = t2.oid 
+and t3.nodeoids::varchar = t4.oid::varchar
+and t1.relname = '' and t2.nspname = '';
+```
 
 ##### 3. 数据库连接
 
