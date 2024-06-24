@@ -823,23 +823,23 @@ order by sumscore desc;
 
 ```sql
 -- create table 
-create table student(sno varchar(20),sname varchar(50),cno int);
-create table class(cno int,cname varchar(50));
-create table course(courid int,courname varchar(50));
-create table score(sno varchar(20),courid int,score int);
+create table student87(sno varchar(20),sname varchar(50),cno int);
+create table class87(cno int,cname varchar(50));
+create table course87(courid int,courname varchar(50));
+create table score87(sno varchar(20),courid int,score int);
 
 -- insert data
-insert into student values('1001','张三',1),('1002','李四',1),('1003','王五',2),('1004','赵六',2);
-insert into class values(1,'1 班'),(2,'2 班');
-insert into course values(1,'语文'),(2,'数学'),(3,'英语'),(4,'物理');
-insert into score values('1001',1,84),('1001',1,64),('1001',2,86),('1001',2,94);
-insert into score values('1001',3,84),('1001',3,56),('1001',4,48),('1001',4,84);
-insert into score values('1002',1,83),('1002',1,85),('1002',2,46),('1002',2,74);
-insert into score values('1002',3,65),('1002',3,76),('1002',4,56),('1002',4,98);
-insert into score values('1003',1,86),('1003',1,74),('1003',2,88),('1003',2,54);
-insert into score values('1003',3,86),('1003',3,76),('1003',4,67),('1003',4,76);
-insert into score values('1004',1,100),('1004',1,100),('1004',2,87),('1004',2,86);
-insert into score values('1004',3,69),('1004',3,67),('1004',4,84),('1004',4,92);
+insert into student87 values('1001','张三',1),('1002','李四',1),('1003','王五',2),('1004','赵六',2);
+insert into class87 values(1,'1班'),(2,'2班');
+insert into course87 values(1,'语文'),(2,'数学'),(3,'英语'),(4,'物理');
+insert into score87 values('1001',1,84),('1001',1,64),('1001',2,86),('1001',2,94);
+insert into score87 values('1001',3,84),('1001',3,56),('1001',4,48),('1001',4,84);
+insert into score87 values('1002',1,83),('1002',1,85),('1002',2,46),('1002',2,74);
+insert into score87 values('1002',3,65),('1002',3,76),('1002',4,56),('1002',4,98);
+insert into score87 values('1003',1,86),('1003',1,74),('1003',2,88),('1003',2,54);
+insert into score87 values('1003',3,86),('1003',3,76),('1003',4,67),('1003',4,76);
+insert into score87 values('1004',1,100),('1004',1,100),('1004',2,87),('1004',2,86);
+insert into score87 values('1004',3,69),('1004',3,67),('1004',4,84),('1004',4,92);
 ```
 
 
@@ -848,22 +848,98 @@ insert into score values('1004',3,69),('1004',3,67),('1004',4,84),('1004',4,92);
 
 ```sql
 -- 考生作答
--- create table student(sno varchar(20),sname varchar(50),cno int);
--- create table class(cno int,cname varchar(50));
--- create table course(courid int,courname varchar(50));
--- create table score(sno varchar(20),courid int,score int);
+-- create table student87(sno varchar(20),sname varchar(50),cno int);
+-- create table class87(cno int,cname varchar(50));
+-- create table course87(courid int,courname varchar(50));
+-- create table score87(sno varchar(20),courid int,score int);
+select 
+	t1.sno,
+	t3.cname,
+	round(avg(score),2)
+from 
+	score87 t1,
+	student87 t2,
+	class87 t3 
+where 
+	t1.sno = t2.sno 
+and 
+	t2.cno = t3.cno 
+and 
+	t1.sno 
+in 
+	(select 
+         sno 
+     from 
+     	score87 
+     where 
+     	courid 
+     in 
+     	(select courid from course87 where courname = '语文') group by sno having avg(score) > 80) 
+			and 
+				courid 
+			in 
+		(select courid from course87 where courname = '语文') 
+group by 
+	t1.sno,t3.cname;
 ```
 
-##### (2) 在上一题基础上，使用from查询优化
+##### (2) 在上一题基础上，使用from查询优化,将where条件中的非相关子查询，改为from后边的范围表
 
 ```sql
 -- 考生作答
+select 
+	t1.sno,
+	cname,
+	round(avgscore,2)
+from 
+	(select 
+     	t3.sno,
+     	t3.cno,
+     	avg(score) avgscore 
+     from 
+     	score87 t1,
+     	course87 t2,
+     	student87 t3 
+    where 
+     	t1.sno = t3.sno 
+     and 
+     	t1.courid = t2.courid 
+     and 
+     	courname = '语文' 
+     group by 
+     	t3.sno,
+     	t3.cno 
+     having avgscore>80 ) t1,class87 t2 
+where 
+	t1.cno = t2.cno;
 ```
 
 ##### (3) 在上一题目基础上，使用父查询(消除子查询)
 
 ```sql
 -- 考生作答
+select 
+	t3.cno,
+	t3.cname,
+	round(avg(score),2) avgscore 
+from 
+	score87 t1,
+	student87 t2,
+	class87 t3,
+	course87 t4 
+where 
+	t1.sno = t2.sno 
+and 
+	t2.cno = t3.cno 
+and 
+	t1.courid = t4.courid 
+and 
+	courname = '语文' 
+group by 
+	t1.sno,
+	t3.cno,
+	t3.cname 
+having avgscore>80;
 ```
 
 #### 8. 存储过程
