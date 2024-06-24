@@ -36,7 +36,12 @@ CREATE INDEX
 
 ```sql
 -- 云主机上练习
-select tablename,nodename,dnsize from table_distribution();
+select 
+	tablename,
+	nodename,
+	dnsize 
+from 
+	table_distribution();
 hcie9=# select tablename,nodename,dnsize from table_distribution();
 ERROR:  unsupported view in single node mode.
 -- 注意考试时的where 后面根据具体schemas和table传值查询
@@ -57,7 +62,15 @@ and
 	t2.relname = 'test';
 	
 -- 结果 
-select conname from pg_constraint t1,pg_class t2 where t1.conrelid = t2.oid and t2.relname = 'test';
+select 
+	conname 
+from 
+	pg_constraint t1,
+	pg_class t2 
+where 
+	t1.conrelid = t2.oid 
+and 
+	t2.relname = 'test';
   conname
 -----------
  test_pkey
@@ -68,7 +81,15 @@ alter table test drop constraint test_pkey;
 
 -- 结果 
 hcie9=# 
-select conname from pg_constraint t1,pg_class t2 where t1.conrelid = t2.oid and t2.relname = 'test';
+select 
+	conname 
+from 
+	pg_constraint t1,
+	pg_class t2 
+where 
+	t1.conrelid = t2.oid 
+and 
+	t2.relname = 'test';
  conname
 ---------
 (0 rows)
@@ -117,8 +138,14 @@ show audit_enabled;
 
 -- 或者是
 
- select name,setting from pg_settings where name like 'audit_ena%'
-;
+select
+	name,
+	setting 
+from 
+	pg_settings 
+where 
+	name like 'audit_ena%';
+	
      name      | setting
 ---------------+---------
  audit_enabled | on
@@ -144,7 +171,10 @@ and
 ##### (4) 统计一天内的审计数量要求用now()
 
 ```sql
-select count(*) from pg_query_audit(now()-1,now());
+select 
+	count(*) 
+from 
+	pg_query_audit(now()-1,now());
 ```
 
 ##### (5) 删除指定时间的审计记录(如删除过去10min内的)
@@ -202,13 +232,20 @@ select
 	t1.*,
 	rolname 
 from 
-	(select datname,(aclexplode(datacl)).grantee,(aclexplode(datacl)).privilege_type from pg_database) t1,
+	(select 
+     	datname,
+     	(aclexplode(datacl)).grantee,
+     	(aclexplode(datacl)).privilege_type
+     from 
+     	pg_database) t1,
 	pg_roles 
 where 
 	grantee = pg_roles.oid 
 and 
 	rolname = 'sjh111' 
-and datname not like 'tempplate%';
+and 
+	datname 
+not like 'tempplate%';
 
 ```
 
@@ -216,8 +253,15 @@ and datname not like 'tempplate%';
 
 ```sql
 -- 作答区--pg_tables
-select schemaname,tablename,tableowner from pg_tables where tablename = 'sjh_test'
-;
+select 
+	schemaname,
+	tablename,
+	tableowner 
+from 
+	pg_tables 
+where 
+	tablename = 'sjh_test';
+	
  schemaname | tablename | tableowner
 ------------+-----------+------------
  public     | sjh_test  | omm
@@ -228,7 +272,17 @@ select schemaname,tablename,tableowner from pg_tables where tablename = 'sjh_tes
 
 ```sql
 -- 作答区-- information_schema.table_privileges
-hcie9=# select table_name,table_schema,grantee,privilege_type from information_schema.table_privileges where grantee = 'sjh111';
+hcie9=# 
+select 
+	table_name,
+	table_schema,
+	grantee,
+	privilege_type 
+from 
+	information_schema.table_privileges  -- 记住这个
+where 
+	grantee = 'sjh111';
+	
  table_name | table_schema | grantee | privilege_type
 ------------+--------------+---------+----------------
  sjh_test   | public       | sjh111  | SELECT
@@ -239,7 +293,14 @@ hcie9=# select table_name,table_schema,grantee,privilege_type from information_s
 
 ```sql
 -- 作答区 -- information_schema.table_privileges
- select grantee,privilege_type from information_schema.table_privileges where table_name = 'sjh_test';
+select 
+	grantee,
+	privilege_type 
+from 
+	information_schema.table_privileges 
+where 
+	table_name = 'sjh_test';
+	
  grantee | privilege_type
 ---------+----------------
  omm     | INSERT
