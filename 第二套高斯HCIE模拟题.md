@@ -15,7 +15,7 @@ insert into stu values(1,60,33,66),(2,61,53,86),(3,70,63,66),(4,90,63,76),(5,59,
 
 ##### (1) 查看每门成绩是否大于每门平均成绩
 
-````sql
+```sql
 --考生作答
 select *,	
 	case when math <=avg(math) over() then '不大于' else '大于' end as is_math_bigger, 
@@ -32,42 +32,15 @@ moniti2-# from stu;
   4 |   90 |  63 |  76 | 大于           | 大于          | 大于
   5 |   59 |  69 |  79 | 不大于         | 大于          | 大于
 (5 rows)
-
 ```
+
+```sql
 ```sql
 窗口函数，正常来说所有的聚合函数都是在分组之后计算的对吧，比如常见的count，sum，avg这些，但是openGauss的分组有些问题，就是要单独查询的字段都必须是分组键，这个over的作用相当于是局部的分组，over里面有两个可配置的参数over(partition by c1 order by c1 desc) partition就等价于groupby，orderby就是排序，在聚合函数后面加over表示你的聚合计算是根据后面over指定的分组方式和排序方式得到结果
 
 正常计算每个学生的总成绩就是select sid,sum(score) from score group by sid，如果要查询学生姓名那就得是select sid,sname,sum(score) from score group by sid,sname
 
 用over的话就是对于大查询来说没有做分组select sid,sname,sum(score) over(partition by sid) from score
-```
-
-##### (2) 编写函数获取成绩绩点，输入学生id和科目名称，输出对应的绩点值 0~59 给0；60~69给0.1;70~79给0.2; 80~89给0.3; 90~100给0.4
-
-```sql
---考生作答
-create or replace function get_gd_by_score(inputscore int) returns float as
-$$
-declare gd float;
-begin
-select (case when inputscore <=59 then 0 when inputscore <=69 then 0.1 when inputscore <=79 then 0.2 when inputscore <=89 then 0.3 when inputscore <=100 then 0.4 else -1 end) into gd;
-return gd;
-end;
-$$ language plpgsql;
-
--- 总结高斯数据库编写函数的结构及case when 结构
--- case when结构以case开头，以end终止
-create or replace function -- 1. 创建函数开头的固定写法 
-get_gd_by_score(inputscore int) -- 2. 声明函数名及传入的参数和参数类型 
-returns float -- 3. 声音返回值的数据类型 
-as -- 4. 固定写法
-$$ -- 5.1 这个神奇的$$符号，开始要一对$$，终止也要一对$$,两对$$将SQL业务逻辑包含其中
-declare gd float; -- 6
-begin -- 7.1 固定写法
-select (case when inputscore <=59 then 0 when inputscore <=69 then 0.1 when inputscore <=79 then 0.2 when inputscore <=89 then 0.3 when inputscore <=100 then 0.4 else -1 end) into gd; -- 8. sql 业务逻辑
-return gd; -- 9. 返回值
-end; -- 7.2 固定写法
-$$ language plpgsql; -- 5.2 这个神奇的$$符号，开始要一对$$，终止也要一对$$,两对$$将SQL业务逻辑包含其中
 ```
 
 ```sql
@@ -86,7 +59,32 @@ end;
 $$ language plpgsql;
 ```
 
+##### (2) 编写函数获取成绩绩点，输入学生id和科目名称，输出对应的绩点值 0~59 给0；60~69给0.1;70~79给0.2; 80~89给0.3; 90~100给0.4
 
+```sql
+--考生作答
+create or replace function get_gd_by_score(inputscore int) returns float as
+$$
+declare gd float;
+begin
+select (case when inputscore <=59 then 0 when inputscore <=69 then 0.1 when inputscore <=79 then 0.2 when inputscore <=89 then 0.3 when inputscore <=100 then 0.4 else -1 end) into gd;
+return gd;
+end;
+$$ language plpgsql;
+-- 总结高斯数据库编写函数的结构及case when 结构
+-- case when结构以case开头，以end终止
+create or replace function -- 1. 创建函数开头的固定写法 
+get_gd_by_score(inputscore int) -- 2. 声明函数名及传入的参数和参数类型 
+returns float -- 3. 声音返回值的数据类型 
+as -- 4. 固定写法
+$$ -- 5.1 这个神奇的$$符号，开始要一对$$，终止也要一对$$,两对$$将SQL业务逻辑包含其中
+declare gd float; -- 6
+begin -- 7.1 固定写法
+select (case when inputscore <=59 then 0 when inputscore <=69 then 0.1 when inputscore <=79 then 0.2 when inputscore <=89 then 0.3 when inputscore <=100 then 0.4 else -1 end) into gd; -- 8. sql 业务逻辑
+return gd; -- 9. 返回值
+end; -- 7.2 固定写法
+$$ language plpgsql; -- 5.2 这个神奇的$$符号，开始要一对$$，终止也要一对$$,两对$$将SQL业务逻辑包含其中
+```
 
 ```sql
 总结高斯数据库编写函数的结构
@@ -544,8 +542,4 @@ alter index age_no,age_name unusable;
 ##### (2) 存储过程和函数的区别
 
 ##### (3) 存储过程和匿名块的区别
-
-
-
-
 
