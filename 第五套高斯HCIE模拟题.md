@@ -194,7 +194,7 @@ hcie5=# select t2.age_group,sum(t2.nutrition_value*t1.n) from (select t.age_grou
 (4 rows)
 ```
 
-##### 2. 数据库对象管理及SQL语法2(周第六套一样)
+##### 2. 数据库对象管理及SQL语法2
 
 ##### 当前有一张订单表lineitem,具体字段如下
 
@@ -245,7 +245,7 @@ L_ARRIVALDATE DATA NOT NULL, -- 到达日期
 L_ORDERSTRATEGY CHAR(32) NOT NULL,  -- 订单处理策略
 L_TRANSPORTROUTE CHAR(32) NOT NULL, -- 运输路径
 L_COMMENT VARCHAR(64) NOT NULL, -- 备注
-) distribute by hash(L_ORDERBYKEY),
+) distribute by hash(L_ORDERBYKEY)
 partition by range(L_SHIPDATE)(
 partition L_SHIPDATE_1 values less than ('1993-01-01'),
 partition L_SHIPDATE_2 values less than ('1994-01-01'),
@@ -459,15 +459,12 @@ CREATE AUDIT POLICY
 ##### (5) 创建postgres, 创建表tb1,创建审计策略adt3,仅审计记录用户root,在执行针对表tb1资源进行select,insert,delete操作数据库创建审计策略
 
 ```sql
-
-
 -- 1. create table
 create table tb1(c1 int);
 -- 2. create resource label
 create resource lable rls_adt3 add table(tb1);
 -- 3. create audit polic
 create audit policy adt3 access select on label(rls_adt3),insert on label(),delete on label() filter on roles(root);
-
 ```
 
 ##### (6) 为统一审计对象adt1,增加描述'audit policy for tb1'

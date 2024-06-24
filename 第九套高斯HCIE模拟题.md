@@ -42,7 +42,7 @@ ERROR:  unsupported view in single node mode.
 -- 注意考试时的where 后面根据具体schemas和table传值查询
 ```
 
-##### (3) 删除主键索引
+##### (3) 删除主键索引(重点记住)
 
 ```sql
 -- 1. 查看约束名称
@@ -122,7 +122,6 @@ show audit_enabled;
      name      | setting
 ---------------+---------
  audit_enabled | on
-
 ```
 
 ##### (3) 查看用户hcie_audit成功登录postgres的记录
