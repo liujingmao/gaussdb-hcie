@@ -92,6 +92,18 @@
 
   **commit;**
 
+  ```sql
+  -- READ COMMITTED 为设置已提交隔离级别
+  
+  -- READ ONLY 为只读模式
+  
+  -- READ WRITER 未读写模式
+  ```
+
+  
+
+  
+
 
 
 
