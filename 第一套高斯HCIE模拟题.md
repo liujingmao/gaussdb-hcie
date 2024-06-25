@@ -301,6 +301,13 @@ CREATE TABLE ELECTIVE(
     cno integer,
 	grade integer
 );
+
+-- 插入数据
+insert into student values(1,'a','M',12),(2,'b','M',11),(3,'c','F',12);
+
+insert into course values(10,'chinese',100),(20,'math',200);
+
+insert into elective values(1,10,90),(1,20,88),(2,10,92),(2,20,100),(3,10,76),(3,20,90);
 ```
 
 ##### (1) 创建SELECT_SD，查看学生成绩信息，查看学生姓名，课程名称，课程成绩
@@ -324,7 +331,7 @@ as
 		e.cno = c.cno;
 ```
 
-##### (2) 编写函数FUNC_SUM,根据传递的学生的学生编号或者姓名返回某个学生的分类总和
+##### (2) 编写函数FUNC_SUM,根据传递的学生的学生编号或者姓名返回某个学生的分数总和
 
 ```sql
 -- 考生作答
