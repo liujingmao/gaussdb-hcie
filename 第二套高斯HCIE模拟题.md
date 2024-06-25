@@ -84,6 +84,42 @@ select (case when inputscore <=59 then 0 when inputscore <=69 then 0.1 when inpu
 return gd; -- 9. 返回值
 end; -- 7.2 固定写法
 $$ language plpgsql; -- 5.2 这个神奇的$$符号，开始要一对$$，终止也要一对$$,两对$$将SQL业务逻辑包含其中
+
+-- 老师给的答案
+-- 总结重难点
+create or replace function fun_cal_point(id1 int,coursename varchar(30)) returns float as
+$$
+declare point float;
+begin 
+	case when coursename = 'math' then
+	 select (
+		case when math <=59 then 0
+			 when math <=69 then 0.1
+			 when math <=79 then 0.2
+			 when math <=89 then 0.3
+			 when math <=100 then 0.4        
+	 else 0 end ) into point from stu where id = id1;
+		when coursename = 'art' then	 
+	 select (
+		case when art <=59 then 0
+			 when art <=69 then 0.1
+			 when art <=79 then 0.2
+			 when art <=89 then 0.3
+			 when art <=100 then 0.4       
+	 else 0 end ) into point from stu where id = id1; 
+	 when coursename = 'phy' then	 
+	 select (
+		case when phy <=59 then 0
+			 when phy <=69 then 0.1
+			 when phy <=79 then 0.2
+			 when phy <=89 then 0.3
+			 when phy <=100 then 0.4
+	         else 0 end ) into point from stu where id = id1;
+	 else raise notice '请输入正确的科目';
+	 end case;
+	 return point;
+end;
+$$language plpgsql;
 ```
 
 ```sql
@@ -235,7 +271,7 @@ select
 	grantee,
 	table_name,
 	table_schema,
-	privilage_type 
+	privilege_type
 from 
 	information_schema.table_privileges 
 where 
@@ -310,7 +346,7 @@ create user bob_mask password 'Cmb@2024';
 create table tb_for_masking(col1 text,col2 text,col3 text);
 ```
 
-##### (3) 为col1列设置脱敏策略，使用maskall函数对col1列进行数据脱敏
+##### (3) 为col1列设置脱敏策略maskpol1，使用maskall函数对col1列进行数据脱敏
 
 ```sql
 --考生作答
