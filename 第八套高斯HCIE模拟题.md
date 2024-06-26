@@ -73,11 +73,21 @@ group by
 -- 考生作答
 select 
 	student.sno,
-	sname,score 
+	sname,
+	score 
 from 
 	student 
 join
-	(select sno,month,count(1) over (partition by sno) from student where score is null and sname !='Tom') t1 
+	(select 
+     	sno,
+     	month,
+     	count(1) over (partition by sno) 
+    from 
+     	student 
+    where 
+     	score is null 
+    and 
+     	sname !='Tom') t1 
 on 
 	student.sno = t1.sno 
 join 
@@ -192,7 +202,13 @@ select
 	t1.score 
 from 
 	(select * from  student where cno = (select cno from class where cname='class1')) t1 join 
-	(select month,min(score) as ms from student where cno = (select sno from class where cname = 'class2') group by month) t2 
+	(select 
+     	month,
+     	min(score) as ms 
+     from 
+     	student 
+     where 
+     	cno = (select sno from class where cname = 'class2') group by month) t2 
 on
 	t1.month = t2.month 
 and 
@@ -218,7 +234,8 @@ select
 from 
 	student 
 group by 
-	sno,sname 
+	sno,
+	sname 
 having avgscore = (select 
                    		max(t1.ag) 
                    from 
@@ -250,7 +267,23 @@ group by
 	sno,sname;
     
 -- ans
-select sno,sname,round(avg(nvl(score,0)),2) as avgscore,(select max(t1.ag) from (select round(avg(nvl(score,0)),2) as ag from student group by sno) t1) - avgscore from student group by sno,sname;
+select 
+	sno,
+	sname,
+	round(avg(nvl(score,0)),2) as avgscore,
+	(select 
+     	max(t1.ag) 
+     from (select 
+           		round(avg(nvl(score,0)),2) as ag 
+           from 
+           		student 
+           group by 
+           		sno) t1) - avgscore 
+from 
+	student 
+group by 
+	sno,
+	sname;
 ```
 
 #### 3. SQL应用3
@@ -302,7 +335,15 @@ select id,(math+phy) as sum_mp,(art+music) as sum_am from stu;
 
 ``` sql
 -- 考生作答
-select id,sum(math+art+phy+music) as g from stu group by id order by g desc;
+select 
+	id,
+	sum(math+art+phy+music) as g 
+from 
+	stu 
+group by 
+	id 
+order by 
+	g desc;
  id |  g
 ----+-----
   5 | 302
@@ -569,7 +610,8 @@ from
   	from 
  		scopes s,
  		weight w 
-     where w.weight_id=1) t1
+     where 
+     	w.weight_id=1) t1
   join 
     (select 
  		student_id,
@@ -577,11 +619,12 @@ from
   	from 
  		scopes s,
  		weight w 
-     where w.weight_id=2) t2 
+     where 
+     	w.weight_id=2) t2 
  on 
  	t1.student_id = t2.student_id;
  -- 结果: 
- 
+
  student_id | weight_sum1 | weight_rank1 | weight_sum2 | weight_rank2
 ------------+-------------+--------------+-------------+--------------
           2 |       93.70 |            1 |       96.00 |            1
