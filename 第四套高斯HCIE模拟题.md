@@ -389,49 +389,43 @@ from
 group by 
 	id 
 having 
-	ts > (select sum(math+chinese) as maxscore2 from score2 group by id order by maxscore2 desc limit 1);
-	
--- 方法一 join
+	ts > (select 
+          	sum(math+chinese) as maxscore2 
+          from 
+          	score2 
+          group by 
+          	id 
+          order by 
+          	maxscore2 desc limit 1);
+```
 
+```sql
+-- 考生作答
+-- 方法一 join
 select 
 	t1.id,
 	t1.ts1 
 from 
-	(select id,sum(math+chinese) as ts1 from score1 group by id) t1 join 
-	(select max(ts2) ms from (select sum(math+chinese) as ts2 from score2 group by id)) t2 on t1.ts1 > t2.ms;
-	
+	(select id,sum(math+chinese) as ts1 from score1 group by id) t1 
+join 
+	(select 
+     	max(ts2) ms 
+     from 
+     	(select sum(math+chinese) as ts2 from score2 group by id)) t2 
+on 
+	t1.ts1 > t2.ms;
 -- 方法二 where 联立过滤
-
 select 
 	t1.id,
 	t1.ts1 
 from 
 	(select id,sum(math+chinese) as ts1 from score1 group by id) t1,
-	(select max(ts2) ms from (select sum(math+chinese) as ts2 from score2 group by id)) t2 where t1.ts1 > t2.ms;
-```
-
-```sql
--- 考生作答
-select 
-	s1.id,
-	s1.totalscore1 
-from
-	(select id,max(math+chinese) as totalscore1 from score1 group by id) s1,
-	(select id,max(math+chinese) as totalscore2 from score2 group by id) s2
-where
-	s1.totalscore1 > totalscore2;
-	
-select id,sum(chinese+math) as ts from score1 group by id having ts < (select sum(math+chinese) as maxscore2 from score2 group by id order by maxscore2 desc limit 1);
-
-	
-select 
-	id,
-	t1.ts1
-from 
-	(select id,max(math+chinese) as ts1 from score1 group by id) t1, 
-	(select id,max(math+chinese) as ts1 from score2 group by id) t2 
+	(select 
+     	max(ts2) ms 
+     from 
+     	(select sum(math+chinese) as ts2 from score2 group by id)) t2 
 where 
-	ts1 > ts2;
+	t1.ts1 > t2.ms;
 ```
 
 ####  5. 论述
