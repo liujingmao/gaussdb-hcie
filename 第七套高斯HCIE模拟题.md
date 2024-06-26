@@ -1,6 +1,6 @@
 ### 高斯IE第七套
 
-####　1. 数据库对象管理及SQL应用1
+#### 1. 数据库对象管理及SQL应用1
 
 ##### 学生表（成绩表里有空值）
 
@@ -98,7 +98,8 @@ from
      	round((avg(nvl(score,0)) over (partition by month)),2) as avgscore 
      from 
      	student) 
- where score > avgscore;
+ where 
+ 	score > avgscore;
  id | score | month | avgscore
 ----+-------+-------+----------
   6 |    53 |     1 |    40.67
@@ -156,8 +157,7 @@ from
 group by 
 	month 
 order by 
-	month;
-		
+	month;		
 ```
 
 #### 2. 数据库对象管理及SQL应用2
@@ -360,7 +360,7 @@ select count(*) from (
 );??????
 ```
 
-##### (7) 查询库最大连接数???
+##### (7) 查询库最大连接数
 
 ```sql
 -- 考生作答，这个会话数量，之前没有遇到过
@@ -795,7 +795,7 @@ where not exists
      	score2.score = score1.score);
 ```
 
-####　8. 论述
+#### 8. 论述
 
 ##### (1) 什么是数据库事务，介绍GaussDB数据库事务管理的实现
 
