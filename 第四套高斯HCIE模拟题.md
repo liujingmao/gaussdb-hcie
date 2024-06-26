@@ -307,7 +307,6 @@ end;
 
 ```sql
 -- create table 
-
 create table score1(
 	id int,
     chinese int,
@@ -328,8 +327,6 @@ insert into score1 values(4,100,100);
 
 insert into score2 values(10,68,98),(11,58,78),(12,98,99);
 ```
-
-
 
 ##### (1) 查看202201班级和202202班级所有人语文成绩前10的记录，第一个查询使用union
 
@@ -361,8 +358,9 @@ select math from score1  where math not in (select math from score2);
 
 ```sql
 -- 考生作答
--- not 修改为not exists 
-(select chinese,math from score1) not exists in (select chinese,math from score2);
+-- not in 修改为not exists 
+select chinese from score1  where not exists (select chinese from score2 where score1.chinese=score2.chinese);
+select math from score1  where not exists (select math from score2 where score1.math=score2.math);
 ```
 
 ##### (5) 查询班级202201语文成绩最高的学生，要求先创建索引，并能够保证一定会使用索引 
@@ -378,9 +376,6 @@ select max(chinese) from student;
 
 ```sql
 -- 原SQL??
-
-select id,sum(chinese+math) as ts from score1 group by id having ts < (select sum(math+chinese) as maxscore2 from score2 group by id order by maxscore2 desc limit 1);
-
 select 
 	id,
 	sum(chinese+math) as ts 
