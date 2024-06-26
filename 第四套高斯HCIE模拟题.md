@@ -13,7 +13,7 @@ show max_connections;
 
 ```sql
 -- 考生作答
-create user testuser password 'Test@123' connectioin limit 20000;
+create user testuser password 'Test@123' connection limit 20000;
 ```
 
 ##### (3) 查看用户的连接数，展示用户、最大连接数
@@ -67,7 +67,7 @@ create user user1 password 'test@123';
 
 ```sql
 -- 考生作答
-alter user with auditadmin,sysadmin
+alter user user1 with auditadmin sysadmin -- auditamdin与sysadmin之间不要加逗号
 ```
 
 ##### (3) 切换到user1,创建审计策略adt1,对数据库执行create操作
@@ -75,7 +75,7 @@ alter user with auditadmin,sysadmin
 ```sql
 -- 考生作答
 \c - user1
-create audit policy adt1 privilege create;
+create audit policy adt1 privileges create;
 ```
 
 ##### (4) 创建审计策略adt2,数据库执行select操作创建审计策略
