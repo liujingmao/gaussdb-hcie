@@ -34,7 +34,6 @@ select
 	initcap(concat(firstname,'.',familyname)) 
 from 
 	su;
--- 首字母大写怎么搞？？？？
 ```
 
 ##### (2) 插入一条新数据(2,'tom','jerry','tom','H',63),当出现主键冲突时，将主键修改为'F'
@@ -128,7 +127,7 @@ from
 	weight w;
 ```
 
-##### (3) 根据维度表，按照两种加权算法计算出每个学生的加权成绩，展示包含student_id,weight_sum,单个学生加权成绩要求*<u>一行输出</u>* 
+##### (3) 根据维度表，按照两种加权算法计算出每个学生的加权成绩，展示包含student_id,weight_sum1,weight_sum2单个学生加权成绩要求*<u>一行输出</u>* 
 
 ```sql
 -- 考生作答
@@ -160,8 +159,31 @@ on
 
 ```sql
 -- 考生作答
+select 
+	t3.student_id,
+	t3.weight_sum1,
+	t3.rank1,
+	t4.weight_sum2,
+	t4.rank2 
+from 
+	(select t1.student_id,(t1.math*t2.math+t1.phy*t2.phy+t1.art*t2.art+t1.m2*t2.m2) as weight_sum1,dense_rank() over(partition by 1 order by weight_sum1 desc) as rank1 from student t1,weight t2 where weight_no=1) t3 
+join
+	(select t1.student_id,(t1.math*t2.math+t1.phy*t2.phy+t1.art*t2.art+t1.m2*t2.m2) as weight_sum2,dense_rank() over(partition by 1 order by weight_sum2 desc) as rank2 from student t1,weight t2 where weight_no=2) t4 
+on 
+	t3.student_id = t4.student_id;
 
-
+select 
+	t3.student_id,
+	weight_sum1,
+	dense_rank() over (partition by 1 order by weight_sum1 desc) as rank1,
+	weight_sum2,
+	dense_rank() over(partition by 1 order by weight_sum2 desc) as rank2 
+from 
+	(select t1.student_id,(t1.math*t2.math+t1.phy*t2.phy+t1.art*t2.art+t1.m2*t2.m2) as weight_sum1 from student t1,weight t2 where weight_no=1) t3 
+join 
+	(select t1.student_id,(t1.math*t2.math+t1.phy*t2.phy+t1.art*t2.art+t1.m2*t2.m2) as weight_sum2 from student t1,weight t2 where weight_no=2) t4 
+on 
+	t3.student_id = t4.student_id;
 ```
 
 
