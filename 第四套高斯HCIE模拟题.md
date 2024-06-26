@@ -210,7 +210,8 @@ join
      order by 
      	mpscore 
      desc limit 10) s2
-on s1.student_id = s2.student_id;
+on 
+	s1.student_id = s2.student_id;
 ```
 
 ##### (3) 编写存储过程，输入学生id返回总成绩
@@ -304,29 +305,56 @@ end;
 
 ##### 有三个表，分别是学生信息表student和202201班级成绩表score1,202202班级成绩表score2
 
-##### (1) 查看202201班级和202202班级所有人语言成绩前10的记录，第一个查询使用union
+```sql
+-- create table 
+
+create table score1(
+	id int,
+    chinese int,
+    math int
+);
+
+create table score2(
+	id int,
+    chinese int,
+    math int
+);
+
+-- insert datas
+
+insert into score1 values(1,78,88),(2,88,98),(3,90,100);
+
+insert into score1 values(4,100,100);
+
+insert into score2 values(10,68,98),(11,58,78),(12,98,99);
+```
+
+
+
+##### (1) 查看202201班级和202202班级所有人语文成绩前10的记录，第一个查询使用union
 
 ```sql
 -- 考生作答
-select * from score1 order by chinese limit 10
+(select * from score1 order by chinese limit 2)
 union
-select * from score2 order by chinese limit 20
+(select * from score2 order by chinese limit 2);
 ```
 
 ##### (2) 对以上SQL语句进行优化
 
 ```sql
 -- 考生作答
-select * from score1 order by chinese limit 10
+(select * from score1 order by chinese limit 2)
 union all
-select * from score2 order by chinese limit 10
+(select * from score2 order by chinese limit 2);
 ```
 
 ##### (3) 查看两个班级的科目，202201班级在score2表中不存在的成绩，要求使用not in(需要确定score1,score2表具体字段有哪些科目，以及所谓相同科目是一个具体科目还是所有科目都要判断)
 
 ```sql
 -- 考生作答
-(select chinese from score1) not in (select chinese form score2);
+select chinese from score1  where chinese not in (select chinese from score2);
+select math from score1  where math not in (select math from score2);
 ```
 
 ##### (4) 对以上SQL语句进行优化
@@ -334,7 +362,7 @@ select * from score2 order by chinese limit 10
 ```sql
 -- 考生作答
 -- not 修改为not exists 
-(select chinese from score1) not exists (select chinese form score2);
+(select chinese,math from score1) not exists in (select chinese,math from score2);
 ```
 
 ##### (5) 查询班级202201语文成绩最高的学生，要求先创建索引，并能够保证一定会使用索引 
@@ -350,18 +378,60 @@ select max(chinese) from student;
 
 ```sql
 -- 原SQL??
+
+select id,sum(chinese+math) as ts from score1 group by id having ts < (select sum(math+chinese) as maxscore2 from score2 group by id order by maxscore2 desc limit 1);
+
+select 
+	id,
+	sum(chinese+math) as ts 
+from 
+	score1 
+group by 
+	id 
+having 
+	ts > (select sum(math+chinese) as maxscore2 from score2 group by id order by maxscore2 desc limit 1);
+	
+-- 方法一 join
+
+select 
+	t1.id,
+	t1.ts1 
+from 
+	(select id,sum(math+chinese) as ts1 from score1 group by id) t1 join 
+	(select max(ts2) ms from (select sum(math+chinese) as ts2 from score2 group by id)) t2 on t1.ts1 > t2.ms;
+	
+-- 方法二 where 联立过滤
+
+select 
+	t1.id,
+	t1.ts1 
+from 
+	(select id,sum(math+chinese) as ts1 from score1 group by id) t1,
+	(select max(ts2) ms from (select sum(math+chinese) as ts2 from score2 group by id)) t2 where t1.ts1 > t2.ms;
 ```
 
 ```sql
 -- 考生作答
 select 
-	id,
-	totalscore1 
+	s1.id,
+	s1.totalscore1 
 from
-	(select id,max(math+chinese) as totalscore1 from score1 ) s1,
-	(select id,max(math+chinese) as totalscore2 from score2 ) s2,
+	(select id,max(math+chinese) as totalscore1 from score1 group by id) s1,
+	(select id,max(math+chinese) as totalscore2 from score2 group by id) s2
 where
-	totalscore1 > totalscore2
+	s1.totalscore1 > totalscore2;
+	
+select id,sum(chinese+math) as ts from score1 group by id having ts < (select sum(math+chinese) as maxscore2 from score2 group by id order by maxscore2 desc limit 1);
+
+	
+select 
+	id,
+	t1.ts1
+from 
+	(select id,max(math+chinese) as ts1 from score1 group by id) t1, 
+	(select id,max(math+chinese) as ts1 from score2 group by id) t2 
+where 
+	ts1 > ts2;
 ```
 
 ####  5. 论述
