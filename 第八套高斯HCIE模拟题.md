@@ -367,7 +367,8 @@ join
      order by 
      	am 
      desc limit 5) t2 
-on t1.id = t2.id;
+on 
+	t1.id = t2.id;
  id | total_score
 ----+-------------
   1 |         250
@@ -506,7 +507,6 @@ from
  	t1.student_id = t2.student_id;
  
  -- 结果: 
- 
   student_id | weight_sum1 | weight_sum2
 ------------+-------------+-------------
           1 |       91.00 |       92.00
@@ -648,7 +648,7 @@ where
 select 
 	t1.student_id,
 	t1.class_id,
-	t1,kemu,
+	t1.kemu,
 	t1.score
 from 
 	test t1 
@@ -847,8 +847,10 @@ group by
 	t1.sno,
 	t1.sname,
 	maxscore 
-having sumscore > maxscore 
-order by sumscore desc;
+having 
+	sumscore > maxscore 
+order by 
+	sumscore desc;
 ```
 
 #### 7.  性能优化3
@@ -912,7 +914,7 @@ in
 			and 
 				courid 
 			in 
-		(select courid from course87 where courname = '语文') 
+				(select courid from course87 where courname = '语文') 
 group by 
 	t1.sno,t3.cname;
 ```
