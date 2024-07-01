@@ -9,7 +9,7 @@
 create table student(sno int,sname varchar(50),score int,cno int);
 create table classes(cno int,cname varchar(50));
 
--- import datas
+-- import datas -- 晓勇加油
 insert into student values(123,'a',456,1);
 insert into student values(124,'b',546,1);
 insert into student values(125,'c',548,1);
