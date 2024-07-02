@@ -9,7 +9,7 @@
 create table student(sno int,sname varchar(50),score int,cno int);
 create table classes(cno int,cname varchar(50));
 
--- import datas -- 晓勇加油
+-- import datas 
 insert into student values(123,'a',456,1);
 insert into student values(124,'b',546,1);
 insert into student values(125,'c',548,1);
@@ -532,7 +532,10 @@ from
 	((select * from teacher order by salary desc limit 3) 
      	union all
      (select * from teacher order by salary limit 3)) t 
-     	join department d on t.deptno = d.id;
+join 
+	department d 
+on 
+	t.deptno = d.id;
 -- 5. 对标注里面的结果进行打印，使用raise notice,该业务逻辑使用begin 和 end包裹
 begin
 	for i in cur1 loop -- 6. 对cur1中的结果进行便利 后面接loop关键字
