@@ -149,7 +149,7 @@ $$ language plpgsql;
 
 ```sql
 moniti2=# 
-select id,(fun_cal_point(id,'math')+fun_cal_point(id,'art')+fun_cal_point(id,'phy')) as gd from stu where id like '%3%';
+ select id,(fun_cal_point(id,'math')+fun_cal_point(id,'art')+fun_cal_point(id,'phy')) as gd from stu where id like '%3%' order by gd desc limit 1;
  id | gd
 ----+----
   3 | .4
