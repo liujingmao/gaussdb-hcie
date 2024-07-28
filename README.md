@@ -2,3 +2,8 @@
 #### 1.笔试
 #### 2.机试
 #### 3.SQL多写就行
+
+#### 4. 总结和分享不易，打赏随意
+
+![dashang](C:\Users\16014\Pictures\dashang.jpg)
+
