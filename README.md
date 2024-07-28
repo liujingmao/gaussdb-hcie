@@ -5,5 +5,5 @@
 
 #### 4. 总结和分享不易，打赏随意
 
-![dashang](C:\Users\16014\Pictures\dashang.jpg)
+<img src="C:\Users\16014\gaussdb\gaussdb-hcie\dashang.jpg" alt="dashang" style="zoom:80%;" />
 
