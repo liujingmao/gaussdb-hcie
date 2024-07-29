@@ -3,9 +3,7 @@
 #### 2.机试
 #### 3.SQL多写就行
 
-#### 4. 总结和分享不易，打赏随意
 
-<img src="https://gitee.com/maomaoking_admin/gaussdb-hcie/blob/master/dashang.jpg" alt="dashang" style="zoom:67%;" />
 
 
 
