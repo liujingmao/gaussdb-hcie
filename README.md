@@ -5,7 +5,9 @@
 
 #### 4. 总结和分享不易，打赏随意
 
-<img src="dashang.jpg" alt="dashang" style="zoom:67%;" />
+<img src="dashang.jpg" alt="dashang" style="zoom: 33%;" />
+
+
 
 
 
