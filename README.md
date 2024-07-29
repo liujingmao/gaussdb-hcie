@@ -5,7 +5,7 @@
 
 #### 4. 总结和分享不易，打赏随意
 
-<img src="C:\Users\liujingmao\Desktop\newcodes\gaussdb-hcie\dashang.jpg" alt="dashang" style="zoom:67%;" />
+<img src="dashang.jpg" alt="dashang" style="zoom:67%;" />
 
 
 
