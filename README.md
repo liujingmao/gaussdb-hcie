@@ -3,7 +3,9 @@
 #### 2.机试
 #### 3.SQL多写就行
 
+#### 4. 总结和分享不易，打赏随意
 
+<img src="C:\Users\liujingmao\Desktop\newcodes\gaussdb-hcie\dashang.jpg" alt="dashang" style="zoom:67%;" />
 
 
 
