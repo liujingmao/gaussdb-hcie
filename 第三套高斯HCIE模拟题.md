@@ -201,7 +201,7 @@ create schema ledgernsp with blockchain;
 
 ```sql
 -- 考生作答
-create ledgernsp.usertable(id int,name text);
+create table ledgernsp.usertable(id int,name text);
 ```
 
 ##### (3) 核验指定防篡改用户表的表级数据hash值与其对应历史表hash一致性
