@@ -2,7 +2,7 @@
 
 
 
-### 1 Windows 下 Postgres 安装
+### 1. Windows 下 Postgres 安装
 
 Windows/Mac 下支持使用可执行文件快速安装，安装后像普通软件一样启动 Postgres 即可。
 
@@ -25,7 +25,7 @@ pg_ctl stop -D "D:\Software\PostgreSQL\16\data"
 
 `-D` 参数告诉 `pg_ctl` 命令应该使用哪个目录中的数据文件和配置文件。
 
-### 2 Ubuntu 下 Postgres 安装
+### 2. Ubuntu 下 Postgres 安装
 
 对于 Debian 的系统（如 Ubuntu），可以使用如下命令：
 
@@ -96,7 +96,7 @@ PostgreSQL 中常见的身份验证方法如下：
 
 
 
-### 3 Docker 快捷安装 PostgreSQL
+### 3. Docker 快捷安装 PostgreSQL
 
 Docker 中安装 PostgreSQL 非常简单，官方配置了镜像支持一件安装。
 
