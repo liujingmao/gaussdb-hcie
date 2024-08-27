@@ -447,7 +447,7 @@ insert into DEPARTMENT values(20,'机电工程学院'),(30,'计算机学院');
 insert into DEPARTMENT values(40,'自动化学院'),(50,'管理学院');
 ```
 
-##### (1) 创建存储过程pro_curs_1,使用游标打印各部门总人数，按照人数降序排序，打印格式如下 ：部门名称1---人数部门名称2---人数打印操作可以使用DBE_OUTPUTPRINT_LINE(outputstr)接口
+##### (1) 创建存储过程pro_curs_1,使用游标打印各部门总人数，按照人数降序排序，打印格式如下 ：部门名称1---人数部门名称2---人数打印操作可以使用DBE_OUTPUT.PRINT(outputstr)接口
 
 ```sql
 -- 考生作答
@@ -456,7 +456,7 @@ as
 declare cursor cur1 is select d.name as dn,count(*) as pc from teacher t,department d where t.deptno=d.id group by d.name order by pc desc;
 begin
 	for i in cur1 loop
-		DBE_OUTPUTPRINT_LINE(concat(i.dn,'---',i.pc::varchar));-- 分布式条件才能使用该函数
+		DBE_OUTPUT.PRINT(concat(i.dn,'---',i.pc::varchar));
 	end loop;
 end;
 call pro_curs_1()
@@ -497,10 +497,13 @@ from
 	((select * from teacher order by salary desc limit 3) 
      	union all
      (select * from teacher order by salary limit 3)) t 
-     	join department d on t.deptno = d.id;
+join 
+	department d 
+on 
+	t.deptno = d.id;
 begin
 	for i in cur1 loop
-		DBE_OUTPUTPRINT_LINE(concat(i.id::varchar,'-',i.sname,'-',i.dname,'-',i.salary::varchar,'-',i.title));
+		DBE_OUTPUT.PRINT(concat(i.id::varchar,'-',i.name,'-',i.name,'-',i.salary::varchar,'-',i.title));
 	end loop;
 end;
 
@@ -517,7 +520,10 @@ from
 	((select * from teacher order by salary desc limit 3) 
      	union all
      (select * from teacher order by salary limit 3)) t 
-     	join department d on t.deptno = d.id;
+join 
+	department d 
+on 
+	t.deptno = d.id;
 begin
 	for i in cur1 loop
 		raise notice '%-%-%-%-%',i.tid,i.tname,i.dname,i.salary,i.title; -- %参数点位符号
