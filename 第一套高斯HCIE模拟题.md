@@ -65,8 +65,17 @@ from
 
 ```sql
 -- 考生作答
+-- 考试时分布式建表
 create table p_table(a int,b int,c int,d int) with (ORIENTATION=column)
 distribute by hash(a)
+partition by range(b) (
+	partition p1 values less than(10),
+	partition p2 values less than(20),
+	partition p3 values less than(30),
+    partition p4 values less than(40)
+);
+-- 练习单节点建表
+create table p_table(a int,b int,c int,d int) with (ORIENTATION=column)
 partition by range(b) (
 	partition p1 values less than(10),
 	partition p2 values less than(20),
