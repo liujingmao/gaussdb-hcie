@@ -75,6 +75,9 @@ partition by range(b) (
     partition p4 values less than(40)
 );
 -- 练习单节点建表
+create table p_table(a int,b int,c int,d int) partition by range(b);
+
+-- 主备版本
 create table p_table(a int,b int,c int,d int) with (ORIENTATION=column)
 partition by range(b) (
 	partition p1 values less than(10),
