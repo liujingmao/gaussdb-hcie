@@ -453,7 +453,7 @@ insert into DEPARTMENT values(40,'自动化学院'),(50,'管理学院');
 -- 考生作答
 create or replace procedure pro_curs_1()
 as
-declare cursor cur1 is select d.name as dn,count(*) as pc from teacher t,department d where t.deptno=d.id group by d.name orger by pc desc;
+declare cursor cur1 is select d.name as dn,count(*) as pc from teacher t,department d where t.deptno=d.id group by d.name order by pc desc;
 begin
 	for i in cur1 loop
 		DBE_OUTPUTPRINT_LINE(concat(i.dn,'---',i.pc::varchar));-- 分布式条件才能使用该函数
